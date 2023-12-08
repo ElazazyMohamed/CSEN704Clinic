@@ -1,92 +1,79 @@
 import express, { json } from "express";
-import { 
-  getFamilyMembers, 
-  addFamilyMember, 
-  getappointments, 
-  createPatient, 
-  deletePatient,
-  fetchPatient,
-  updatePatient,
-  viewDoctorsWithSessionPrice,
-  searchDoctor,
-  filterDoctors,
-  selectDoctor,
-  adddoctor,
-  getPrescriptions,
-  addPrescription,
-  addhealthrecord,
-  downloadHealthRecordFile,
-  removeHealthRecord,
-  viewHealthRecords,
-  viewAllPatients,
-  viewAllDoctors,
-  addPackageToFamilyMember,
-  reserveappointment,
-  payAppointment,
-  payPackage,
-  getWallet, linkFamily, payAppointment2, payPackage2
-} from "../controllers/patientController.js";
+import { createPatient, updatePatient, deletePatient, setFamilyMember, getFamilyMembers, 
+         getDoctorsNameSpecialitySessionPrice, getDoctorNameSpeciality, filterDoctorsSpecialityAvailability, 
+         selectDoctor, getPrescriptions, addPrescription, filterPrescription, selectPrescription } from "../controllers/patientController.js";
 import upload from "../Middleware/multer.js";
 
 //router initialization
 const router = express.Router();
 
-//get request
-router.get("/", fetchPatient);
-
-router.post("/reserveappointment",reserveappointment)
-
-//post request
+// //post request
 router.post("/", createPatient);
-
-//delete request
-router.delete("/", deletePatient);
 
 //put request
 router.put("/", updatePatient);
 
+//delete request
+router.delete("/", deletePatient);
+
 //add family members
-router.patch("/addfamily/", addFamilyMember);
+router.patch("/setFamilyMember", setFamilyMember);
 
-router.patch("/addPackageToFamilyMember/", addPackageToFamilyMember);
 //get family members
-router.get("/getfamily/:username", getFamilyMembers);
+router.get("/getFamilyMembers", getFamilyMembers);
 
-//add doctor to patient
-router.patch("/adddoctor/", adddoctor);
+// View doctors names, speciality and sessionPrice
+router.get("/getDoctorsNameSpecialitySessionPrice", getDoctorsNameSpecialitySessionPrice);
 
-// prescriptions to patient
-router.get("/getprescription/", getPrescriptions);
-router.post("/addprescription/", addPrescription);
+// search doctor name and or or speciality 
+router.get("/getDoctorNameSpeciality", getDoctorNameSpeciality);
 
-router.get("/getappointments/:username", getappointments);
+// filter doctors speciality and or or availability on certain date and at specific time
+router.get("/filterDoctorsSpecialityAvailability", filterDoctorsSpecialityAvailability);
 
-//37
-router.get("/doctors/session-price", viewDoctorsWithSessionPrice);
+// select a doctor from the search or the filter
+router.get("/selectDoctor/:username", selectDoctor);
 
-//38
-router.get("/searchDoc", searchDoctor);
+// Add prescription to a patient
+router.post("/addPrescription", addPrescription);
 
-//39
-router.get("/filter", filterDoctors);
+// get prescriptions of a patient
+router.get("/getprescriptions", getPrescriptions);
 
-//40
-router.get("/select/:username", selectDoctor);
+// filter prescriptions
+router.get("/filterPrescription", filterPrescription)
 
-//2
-router.post("/addhealthrecord", upload.single("file"), addhealthrecord);
-router.get("/download/:recordId", downloadHealthRecordFile);
-router.delete("/removehealthrecord/:recordId", removeHealthRecord);
-router.get("/viewhealthrecords", viewHealthRecords);
-router.get("/viewallpatients", viewAllPatients);
-router.get("/viewalldoctors", viewAllDoctors);
+// select a prescription from filter prescriptions
+router.get("/selectPrescription/:prescriptionId", selectPrescription);
 
-router.post("/payment-appointment", payAppointment);
-router.get("/payment-appointment", payAppointment2);
-router.post("/payment-package", payPackage);
-router.get("/payment-package", payPackage2);
+// // get request
+// router.get("/", fetchPatient);
 
-router.get("/wallet", getWallet);
-router.post('/link',linkFamily);
+// router.post("/reserveappointment",reserveappointment)
+
+// router.patch("/addPackageToFamilyMember/", addPackageToFamilyMember);
+
+// //add doctor to patient
+// router.patch("/adddoctor/", adddoctor);
+
+
+
+// router.get("/getappointments/:username", getappointments);
+
+// //2
+// router.post("/addhealthrecord", upload.single("file"), addhealthrecord);
+// router.get("/download/:recordId", downloadHealthRecordFile);
+// router.delete("/removehealthrecord/:recordId", removeHealthRecord);
+// router.get("/viewhealthrecords", viewHealthRecords);
+// router.get("/viewallpatients", viewAllPatients);
+// router.get("/viewalldoctors", viewAllDoctors);
+
+// router.post("/payment-appointment", payAppointment);
+// router.get("/payment-appointment", payAppointment2);
+// router.post("/payment-package", payPackage);
+// router.get("/payment-package", payPackage2);
+
+// router.get("/wallet", getWallet);
+// router.post('/link',linkFamily);
 
 export default router;

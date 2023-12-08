@@ -37,17 +37,18 @@ const prescriptionSchema = new mongoose.Schema({
     data: Buffer,
     contentType: String,
   },
-  doctor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Doctor",
-  },
   date: {
     type: Date,
+    required: true,
   },
-  doctorName: {
-    type: String,
-    default: "soubky",
+  doctor: {
+    username: String,
+    name: String,
   },
+  filled: {
+    type:Boolean,
+    required: true,
+  }
 });
 
 const familyMemberSchema = new mongoose.Schema({
@@ -140,7 +141,7 @@ const patientSchema = new mongoose.Schema({
     required: true,
   },
   phoneNumber: {
-    type: Number,
+    type: String,
     required: true,
     minlength: 11,
   },
@@ -149,7 +150,7 @@ const patientSchema = new mongoose.Schema({
     required: true,
   },
   emergencyPhoneNumber: {
-    type: Number,
+    type: String,
     required: true,
     minlength: 11,
   },
