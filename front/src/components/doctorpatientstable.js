@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import "../styles/doctor.css";
+import { Link } from "react-router-dom";
+import { useParams } from 'react-router-dom'
 
 function DoctorPatientsTable() {
   const [username, setUsername] = useState("");
@@ -13,9 +15,9 @@ function DoctorPatientsTable() {
   };
 
   const handleFetchPatients = async () => {
-    // Make an API request to fetch family members based on the entered username
-    const response = await fetch("http://localhost:4000/api/doctor/getpatients/" + username, {
-      method: "GET",
+    // Make an API request to fetch patients of the doctor
+    const response = await fetch("http://localhost:4000/api/doctor/getpatients", {
+        credentials: 'include'
     });
 
     if (response.ok) {
@@ -46,15 +48,8 @@ patient.name.toLowerCase().includes(searchQuery.toLowerCase())
   return (
     <>
       <div className="input-section">
-        <label>Doctor's Username: </label>
-        <input
-          type="text"
-          placeholder="Enter Doctor's Username"
-          value={username}
-          onChange={handleInputChange}
-        />
         <button className="button-78" onClick={handleFetchPatients}>
-          View Patients
+          View my Patients
         </button>
       </div>
 
@@ -96,7 +91,12 @@ patient.name.toLowerCase().includes(searchQuery.toLowerCase())
           <p><strong>Name:</strong> {selectedPatient.name}</p>
           <p><strong>Username:</strong> {selectedPatient.username}</p>
           <p><strong>Phone Number:</strong> {selectedPatient.phoneNumber}</p>
-          <p><strong>Health Record:</strong> {selectedPatient.healthrecords}</p>
+          <p><strong>Health Record:</strong> 
+          {console.log('Selected Patient ID:', selectedPatient._id)}
+          <Link to={`/doctor/records/${selectedPatient._id}`} className="blue-text-link">
+           view health Records
+          </Link>
+          </p>
           <p><strong>Password:</strong> {selectedPatient.password}</p>
           <p><strong>Gender:</strong> {selectedPatient.gender}</p>
           <p><strong>Emergency Name:</strong> {selectedPatient.emergencyFullName}</p>

@@ -8,9 +8,9 @@ export default function ResetPW() {
       <CssBaseline />
       <Box
         display="flex"
-        height={"100vh"}
-        alignItems={"center"}
-        justifyContent={"center"}
+        height="100vh"
+        alignItems="center"
+        justifyContent="center"
       >
         <ResetForm />
       </Box>

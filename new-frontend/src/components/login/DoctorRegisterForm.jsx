@@ -28,12 +28,15 @@ export default function DoctorRegisterForm() {
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
+        width: "50%",
       }}
     >
-      <Typography sx={{ margin: 3, marginTop: 10 }} component="h1" variant="h3">
+      <Typography
+        sx={{ marginBottom: 1 }}
+        component="h1"
+        variant="h3"
+        align="center"
+      >
         Doctor Registration
       </Typography>
       <TextField

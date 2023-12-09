@@ -10,7 +10,16 @@ export default function Register() {
   return (
     <Container component="main" maxWidth="xl">
       <CssBaseline />
-      <Stack direction="column" height={"100vh"}>
+      <Stack
+        direction="column"
+        height={"100vh"}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {doctorToggle ? (
           <DoctorRegisterForm />
         ) : (
@@ -18,9 +27,7 @@ export default function Register() {
         )}
         <Box
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            width: "50%",
           }}
         >
           {doctorToggle ? (

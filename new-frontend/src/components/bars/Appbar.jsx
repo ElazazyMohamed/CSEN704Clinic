@@ -5,7 +5,10 @@ import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { UserManagementList } from "./consts/admin/AdminAppbarItems";
+import {
+  UserManagementList,
+  PackageManagementList,
+} from "./consts/admin/AdminAppbarItems";
 import {
   FamilyMembersList,
   AppointmentsList,
@@ -22,9 +25,14 @@ export default function Appbar() {
   let AppbarItems = [];
   console.log(user);
   switch (user.openedNavbar) {
+    //admin
     case NavbarLabel.UserManagement:
       AppbarItems = UserManagementList;
       break;
+    case NavbarLabel.HealthPackages:
+      AppbarItems = PackageManagementList;
+      break;
+    //patient
     case NavbarLabel.FamilyMembers:
       AppbarItems = FamilyMembersList;
       break;
@@ -77,7 +85,6 @@ export default function Appbar() {
             <Button
               key={item.id}
               sx={{
-                my: 2,
                 color: "black",
                 display: "block",
                 marginLeft: 10,

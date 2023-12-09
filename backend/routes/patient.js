@@ -1,7 +1,9 @@
 import express, { json } from "express";
 import { createPatient, updatePatient, deletePatient, setFamilyMember, getFamilyMembers, 
          getDoctorsNameSpecialitySessionPrice, getDoctorNameSpeciality, filterDoctorsSpecialityAvailability, 
-         selectDoctor, getPrescriptions, addPrescription, filterPrescription, selectPrescription } from "../controllers/patientController.js";
+         selectDoctor, getPrescriptions, addPrescription, filterPrescription, selectPrescription,
+         addhealthrecord, downloadHealthRecordFile, removeHealthRecord, viewHealthRecords, viewAllPatients,
+         viewAllDoctors} from "../controllers/patientController.js";
 import upload from "../Middleware/multer.js";
 
 //router initialization
@@ -61,12 +63,12 @@ router.get("/selectPrescription/:prescriptionId", selectPrescription);
 // router.get("/getappointments/:username", getappointments);
 
 // //2
-// router.post("/addhealthrecord", upload.single("file"), addhealthrecord);
-// router.get("/download/:recordId", downloadHealthRecordFile);
-// router.delete("/removehealthrecord/:recordId", removeHealthRecord);
-// router.get("/viewhealthrecords", viewHealthRecords);
-// router.get("/viewallpatients", viewAllPatients);
-// router.get("/viewalldoctors", viewAllDoctors);
+router.post("/addhealthrecord", upload.single("file"), addhealthrecord);
+router.get("/download/:recordId", downloadHealthRecordFile);
+router.delete("/removehealthrecord/:recordId", removeHealthRecord);
+router.get("/viewhealthrecords", viewHealthRecords);
+router.get("/viewallpatients", viewAllPatients);
+router.get("/viewalldoctors", viewAllDoctors);
 
 // router.post("/payment-appointment", payAppointment);
 // router.get("/payment-appointment", payAppointment2);

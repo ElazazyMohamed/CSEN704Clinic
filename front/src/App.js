@@ -19,6 +19,8 @@ import RoleContext from "./pages/RoleContext.js";
 import UsernameContext from "./pages/UsernameContext.js";
 import Wallet from "./pages/wallet.js";
 import PayAppointment from "./components/payAppointment.js";
+import TheirRecords from "./pages/theirHealthRecords.js";
+import MyRecords from "./pages/MyRecords.js";
 
 function App() {
   const [username, setUsername] = useState('');
@@ -65,6 +67,8 @@ function App() {
             <Route path="/doctor/wallet" element={<Wallet />} />
             <Route path="/patient/wallet" element={<Wallet />} />
             <Route path="/patient/pay-appointment" element={<PayAppointment />} />
+            <Route path="/patient/records" element={<MyRecords />} />
+            <Route path="/doctor/records/:patientId" element={<TheirRecords />} />
           </Routes>
         </div>
       </BrowserRouter>

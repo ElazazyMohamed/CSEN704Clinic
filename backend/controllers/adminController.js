@@ -1,16 +1,12 @@
+import userModel from "../models/userModel.js";
 import adminModel from "../models/adminModel.js";
 import doctorModel from "../models/doctorModel.js";
 
 export const createAdmin = async (req, res) => {
-  const {
-    username,
-    password
-  } = req.body;
+  const { username, password } = req.body;
   try {
-    const admin = await adminModel.create({
-      username,
-      password
-    });
+    const user = await userModel.create({ username, password, role:"Admin" });
+    const admin = await adminModel.create({ username });
     res.status(200).json(admin);
   } catch (error) {
     res.status(400).json({error: error.message});
@@ -20,8 +16,9 @@ export const createAdmin = async (req, res) => {
 export const deleteAdmin = async (req, res) => {
   const{username}=req.body;
   try {
-    const deletedUser = await adminModel.findOneAndDelete({ username});
-    res.status(200).json(deletedUser);
+    const deletedUser = await userModel.findByIdAndDelete({ username: username });
+    const deletedAdmin = await adminModel.findOneAndDelete({ username: username });
+    res.status(200).json({message: "Admin deleted Successfully"});
   } catch (error) {
     res.status(400).json({error: error.message});
   }

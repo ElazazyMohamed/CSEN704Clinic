@@ -222,3 +222,70 @@ select {
   justify-content: space-between;
   margin-top: 300px;
 }
+
+.blue-text-link {
+  color: blue;
+  text-decoration: underline; /* Add underline for a typical link look */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+.blue-text-link:hover {
+  color: darkblue; /* Change color on hover */
+}
+
+.health-records-container {
+  margin-bottom: 32px; /* Add space between title and records */
+  color: black; /* Set the title color to dark green */
+}
+
+.health-records-title {
+  font-size: 32px; /* Set title font size to make it bigger */
+  font-weight: bold; /* Set title font weight to make it bold */
+  color: blue;
+  margin-bottom: 40px;
+}
+
+.health-records-list {
+  list-style: none; /* Remove list-style for ul */
+  padding: 0; /* Remove default padding for ul */
+}
+
+.health-record-item {
+  margin-bottom: 24px; /* Add space between each health record */
+}
+
+.download-button {
+  padding: 8px 16px; /* Add padding to the button */
+  background-color: darkgreen; /* Set button background color */
+  color: white; /* Set button text color */
+  border: none; /* Remove button border */
+  cursor: pointer; /* Add pointer cursor */
+}
+
+.download-button:hover {
+  background-color: forestgreen; /* Change button background color on hover */
+}
+
+/* Added the health-record-frame class to define the frame style */
+.health-record-frame {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.Add-health-records-title {
+  font-weight: bold; /* Set title font weight to make it bold */
+  color: blue;
+  margin-bottom: 40px;
+}
+
+.delete-button {
+  padding: 8px 16px; /* Add padding to the button */
+  background-color: red; /* Set button background color */
+  color: white; /* Set button text color */
+  border: none; /* Remove button border */
+  cursor: pointer; /* Add pointer cursor */
+}
+
+.delete-button:hover {
+  background-color: darkred; /* Change button background color on hover */
+}

@@ -1,6 +1,7 @@
+import userModel from "../models/userModel.js";
 import patientModel from "../models/patientModel.js";
-import jwt from "jsonwebtoken"
 import doctorModel from "../models/doctorModel.js";
+import jwt from "jsonwebtoken"
 import fs from 'fs/promises';
 import path from 'path';
 // import stripe from "stripe";
@@ -12,7 +13,8 @@ export const createPatient = async (req, res) => {
   const { username, name, email, password, dob, gender, phoneNumber, emergencyFullName, 
           emergencyPhoneNumber, packages } = req.body;
   try {
-    const patient = await patientModel.create({ username, name, email, password, dob, gender, phoneNumber,
+    const user = await userModel.create({ username, password, role:"Patient" });
+    const patient = await patientModel.create({ username, name, email, dob, gender, phoneNumber,
                                                 emergencyFullName, emergencyPhoneNumber, packages });
     return res.status(200).json({message: "Patient Created Successfully"});
   } catch (error) {
@@ -35,7 +37,8 @@ export const updatePatient = async (req, res) => {
 export const deletePatient = async (req, res) => {
   const { username } = req.body;
   try {
-    const deletedUser = await patientModel.findOneAndDelete({ username: username });
+    const deletedUser = await userModel.findByIdAndDelete({ username: username});
+    const deletedPatient = await patientModel.findOneAndDelete({ username: username });
     return res.status(200).json({message: "Patient Deleted Successfully"})
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -169,7 +172,6 @@ export const filterDoctorsSpecialityAvailability = async (req, res) => {
 };
 
 // (Req 40) select a doctor from the search/filter results, 
-// (Req 41) view all details of selected doctor including specilaty, affiliation (hospital), educational background
 export const selectDoctor = async (req, res) => {
   try {
     const { username } = req.params;
@@ -185,6 +187,7 @@ export const selectDoctor = async (req, res) => {
   }
 };
 
+// (Req 41) view all details of selected doctor including specilaty, affiliation (hospital), educational background
 export const viewSelectedDoctor = async (req, res, username) => {
   try {
     const selectedDoctor = await doctorModel.findOne({ username: username }).select("name speciality affiliation educationBg availableTimeSlots");
@@ -316,14 +319,38 @@ export const selectPrescription = async (req, res) => {
   }
 };
 
-// export const fetchPatient = async (req, res) => {
-//   try {
-//     const patient = await patientModel.find();
-//     res.status(200).json(patient);
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
+// (Req 2) patient upload/remove documents (PDF,JPEG,JPG,PNG) for my medical history
+export const addhealthrecord = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, "supersecret", async (err, decodedToken) => {
+      if (err) {
+        res.status(400).json({ message: "You are not logged in." });
+      } else {
+        const username = decodedToken.username;
+        const { description } = req.body;
+        const file = req.file.path;
+        const healthrecord = await patientModel.findOneAndUpdate(
+          { username },
+          { $push: { healthrecords: { file, description, by: "patient" } } },
+          { new: true }
+        );
+        res.status(200).json({ message: "Health record added successfully." });
+      }
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const fetchPatient = async (req, res) => {
+  try {
+    const patient = await patientModel.find();
+    res.status(200).json(patient);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
 
 // export const addPackageToFamilyMember = async (req, res) => {
 //   try {
@@ -387,29 +414,7 @@ export const selectPrescription = async (req, res) => {
 
 // // 2
 
-// // patient adding health record
-// export const addhealthrecord = async (req, res) => {
-//   try {
-//     const token = req.cookies.jwt;
-//     jwt.verify(token, "supersecret", async (err, decodedToken) => {
-//       if (err) {
-//         res.status(400).json({ message: "You are not logged in." });
-//       } else {
-//         const username = decodedToken.username;
-//         const { description } = req.body;
-//         const file = req.file.path;
-//         const healthrecord = await patientModel.findOneAndUpdate(
-//           { username },
-//           { $push: { healthrecords: { file, description, by: "patient" } } },
-//           { new: true }
-//         );
-//         res.status(200).json({ message: "Health record added successfully." });
-//       }
-//     });
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
+
 
 // // Function to download health record file
 // export const downloadHealthRecordFile = async (req, res) => {

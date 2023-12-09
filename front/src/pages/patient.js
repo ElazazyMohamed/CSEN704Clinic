@@ -32,6 +32,9 @@ export default function Patient() {
           <Link to="/patient/pay-appointment" className="button">
             Pay For Appointments
           </Link>
+          <Link to="/patient/records" className="button">
+            Health Records
+          </Link>
         <LinkFamily/>
         </div>
         <ChangePasswordForm/>

@@ -59,7 +59,6 @@ export default function Doctor() {
           </Box>
         </Box>
       );
-
     default:
       return (
         <Box display={"flex"}>

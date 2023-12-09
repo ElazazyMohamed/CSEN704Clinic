@@ -1,3 +1,4 @@
+import userModel from "../models/userModel.js";
 import adminModel from "../models/adminModel.js";
 import doctorModel from "../models/doctorModel.js";
 import patientModel from "../models/patientModel.js";
@@ -22,71 +23,47 @@ const clearToken = (res) => {
     res.clearCookie('jwt');
 };
 
-// Login
+// (Req 5) login with username and password
 export const login = async(req,res) => {
     try {
-        const { username, password } = req.body;
-        let tokenData;
-        
-        const admin = await adminModel.findOne({username:username});
-        if (admin) {
-            if(admin.password !== password){
-                return res.status(400).json({error : "Incorrect Password"});
-            }
-            tokenData = {
-                username: username,
-                role: 'admin'
-            };
-        } else {
+        const { username, password } = req.body;        
+        const user = await userModel.findOne({username:username});
 
-            const doctor = await doctorModel.findOne({username:username});
-            if (doctor) {
-                if(doctor.password !== password){
-                    return res.status(400).json({error : "Incorrect Password"});
-                }
-                tokenData = {
-                    username: username,
-                    role: 'doctor',
-                    status: doctor.status
-                };
-            } else {
-
-                const patient = await patientModel.findOne({username:username});
-                if (patient) {
-                    if(patient.password !== password){
-                        return res.status(400).json({error : "Incorrect Password"});
-                    }
-                    tokenData = {
-                        username: username,
-                        role: 'patient'
-                    };
-                } else {
-                    return res.status(400).json({error : "User does not exist"});
-                }
-            }
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
         }
+        if(user.password !== password) {
+            return res.status(400).json({ error: "Password not correct"});
+        }
+
+        const tokenData = {
+            username: user.username,
+            role: user.role,
+        };
         const token = createToken(tokenData);
         const maxAge = 3 * 24 * 60 * 60;
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge*1000,sameSite: "none", secure: true });
         res.set('Access-Control-Allow-Origin',req.headers.origin);
-        res.set('Access-Control-Allow-Credentials','true');   
-        res.status(200).json(tokenData);
+        res.set('Access-Control-Allow-Credentials','true'); 
+
+        return res.status(200).json(tokenData);
     } catch (error) {
         return res.status(400).json({error : error.message});
     }
 }
 
+// (Req 6) logout
 export const logout = async (req, res) => {
     try {
 
-      const token = req.cookies.jwt;
-      if (!token){
-          res.status(400).json({error:"You're Not Signed in to Logout !!"})
-           } else {
-                clearToken(res);
-                res.status(200).json({error : "Successfully Logged Out "});}
+        const token = req.cookies.jwt;
+        if (!token){
+            return res.status(400).json({error:"You're Not Signed in to Logout !!"});
+        } else {
+            clearToken(res);
+            return res.status(200).json({error : "Successfully Logged Out "})};
     } catch (error) {
-      res.status(400).json({error:error.message})
+      return res.status(400).json({error:error.message});
     }
   }
 
@@ -118,65 +95,49 @@ const sendMail = async(email, otp) => {
     });
 };
 
-// ForgotPassword
+// (Req 13) reset a forgotten password through OTP sent to email
 export const forgotPassword = async(req,res) => {
     try {
         const { username, email } = req.body;
         const otp = crypto.randomInt(100000, 999999).toString();
-        let tokenData;
-
-        const admin = await adminModel.findOne({username:username});
-        if(!admin) {
-            
-            const doctor = await doctorModel.findOne({username:username});
-            if(doctor) {
-                if(email !== doctor.email) {
-                    return res.status(400).json({error : "Email Doesn't Match"});
-                } else {
-                    tokenData = {
-                        username: username,
-                        role: 'doctor',
-                        otp: otp
-                    };
-                }
-            } else {
-
-                const patient = await patientModel.findOne({username:username});
-                if(patient) {
-                    if(email !== patient.email) {
-                        return res.status(400).json({error : "Email Doesn't Match"});
-                    } else {
-                        tokenData = {
-                            username: username,
-                            role: 'patient',
-                            otp: otp
-                        };
-                    }
-                } else {
-                    return res.status(400).json({error : "User does not exist"});
-                }
-            }
+        const user = await userModel.findOne({ username:username });
+        
+        if(!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        let userRole;
+        if(user.role === "Admin") {
+            userRole = await adminModel.findOne({ username: username });
         } else {
-            tokenData = {
-                username: username,
-                role: 'admin',
-                otp: otp
-            };
+            if(user.role === "Doctor") {
+                userRole = await doctorModel.findOne({ username: username });
+            } else {
+                userRole = await patientModel.findOne({ username: username });
+            }
+            if(userRole.email !== email) {
+                return res.status(400).json({ error: 'Email does not match' });
+            }
         }
 
         sendMail(email, otp);
+
+        const tokenData = {
+            username: userRole.username,
+            otp: otp,
+        };
         const token = createToken(tokenData);
         const maxAge = 3 * 24 * 60 * 60;
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge*1000,sameSite: "none", secure: true });
         res.set('Access-Control-Allow-Origin',req.headers.origin);
         res.set('Access-Control-Allow-Credentials','true');
+
         res.status(200).json({ message: 'OTP sent successfully' });
     } catch (error) {
         return res.status(400).json({error : error.message});
     }
 }
 
-const validatePassword = (password) => {
+export const validatePassword = (password) => {
     // Create a schema
     var schema = new passwordValidator();
 
@@ -201,6 +162,7 @@ const validatePassword = (password) => {
     }
 }
 
+// (Req 12) change my password
 export const resetPassword = async(req,res) => {
     try {
         const token = req.cookies.jwt;
@@ -211,7 +173,6 @@ export const resetPassword = async(req,res) => {
                 // request from forgotPassword else resetPassword
                 if ('otp' in decodedToken) {
                     const savedUsername = decodedToken.username;
-                    const savedRole = decodedToken.role;
                     const savedOTP  = decodedToken.otp;
                     const {OTP, newPassword, reNewPassword} = req.body;
                     if(OTP !== savedOTP) {
@@ -224,26 +185,12 @@ export const resetPassword = async(req,res) => {
                     if(tempJson) {
                         return res.status(400).json(tempJson);
                     } else {
-                        if (savedRole === 'admin') {
-                            const admin = await adminModel.findOne({username:savedUsername});
-                            admin.password = newPassword;
-                            await admin.save();                    
-                        } else {
-                            if (savedRole === 'doctor') {
-                                const doctor = await doctorModel.findOne({username:savedUsername});
-                                doctor.password = newPassword;
-                                await doctor.save();
-                        
-                            } else {
-                                const patient = await patientModel.findOne({username:savedUsername});
-                                patient.password = newPassword;
-                                await patient.save();                        
-                            }
-                        }        
+                        const user = await userModel.findOne({ username:savedUsername });
+                        user.password = newPassword;
+                        await user.save();        
                     }
                 } else {
                     const savedUsername = decodedToken.username;
-                    const savedRole  = decodedToken.role;
                     const {oldPassword, newPassword, reNewPassword} = req.body;
                     if(newPassword !== reNewPassword) {
                         return res.status(400).json({error : "New Password and Re-input New Password does not match"});
@@ -252,30 +199,14 @@ export const resetPassword = async(req,res) => {
                     if(tempJson) {
                         return res.status(400).json(tempJson);
                     } else {
-                        if(savedRole === 'admin') {
-                            const admin = await adminModel.findOne({username:savedUsername});
-                            admin.password = newPassword;
-                            await admin.save();
-                        } else {
-                            if(savedRole === 'doctor') {
-                                const doctor = await doctorModel.findOne({username:savedUsername});
-                                doctor.password = newPassword;
-                                await doctor.save();
-                            } else {
-                                const patient = await patientModel.findOne({username:savedUsername});
-                                patient.password = newPassword;
-                                await patient.save();
-                            }
+                        const user = await userModel.findOne({ username:savedUsername });
+                        if(user.password !== oldPassword) {
+                            return res.status(400).json({error : "Old password is not correct"});
                         }
-                        let tokenData = {
-                            username: savedUsername,
-                            role: savedRole
-                        };
+                        user.password = newPassword;
+                        await user.save();
 
-                        res.status(200).json({ 
-                            tokenData: tokenData,
-                            message: "Password resetted successfully" 
-                        });
+                        res.status(200).json({message: "Password resetted successfully" });
                     }
                 }
             }

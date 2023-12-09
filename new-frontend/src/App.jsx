@@ -12,8 +12,10 @@ import Admin from "./pages/users/Admin.jsx";
 import Patient from "./pages/users/Patient.jsx";
 import Doctor from "./pages/users/Doctor.jsx";
 
-import Store from "./redux/Store.jsx";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+
+import { store, persistor } from "./redux/store.js";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,22 +47,24 @@ const theme = createTheme({
 
 const App = () => {
   return (
-    <Provider store={Store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <QueryClientProvider client={queryClient}>
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/reset" element={<ResetPW />} />
-              <Route path="/admin/home" element={<Admin />} />
-              <Route path="/patient/home" element={<Patient />} />
-              <Route path="/doctor/home" element={<Doctor />} />
-            </Routes>
-          </QueryClientProvider>
-        </BrowserRouter>
-      </ThemeProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <BrowserRouter>
+            <QueryClientProvider client={queryClient}>
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/reset" element={<ResetPW />} />
+                <Route path="/admin/home" element={<Admin />} />
+                <Route path="/patient/home" element={<Patient />} />
+                <Route path="/doctor/home" element={<Doctor />} />
+              </Routes>
+            </QueryClientProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </PersistGate>
     </Provider>
   );
 };

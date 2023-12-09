@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useRef } from "react";
 import {
   Button,
   Typography,
@@ -10,16 +10,20 @@ import LoginForm from "../../components/login/LoginForm";
 import Cards from "../../components/login/Cards";
 
 export default function Login() {
+  const targetElementRef = useRef(null);
+  const scrollToElement = () => {
+    targetElementRef.current.scrollIntoView();
+  };
   return (
     <Container component="main" maxWidth="xl">
       <CssBaseline />
-      <Stack direction="column" spacing={8}>
+      <Stack direction="column" spacing={"6.5vh"}>
         <Stack
           display="flex"
           direction="row"
           justifyContent="center"
           alignContent="center"
-          paddingTop={5}
+          paddingTop={"2vh"}
         >
           <img
             src="../../images/logo.png"
@@ -38,14 +42,12 @@ export default function Login() {
         <Button
           variant="contained"
           sx={{ width: "15%", alignSelf: "center" }}
-          onClick={() => {
-            window.scrollBy(0, 1080);
-          }}
+          onClick={scrollToElement}
         >
           Get Started
         </Button>
       </Stack>
-      <LoginForm />
+      <LoginForm ref={targetElementRef} />
     </Container>
   );
 }

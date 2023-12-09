@@ -14,7 +14,7 @@ export default function Cards() {
     <Grid container spacing={2}>
       <Grid item md={4}>
         <Card elevation={3}>
-          <CardMedia sx={{ height: 300 }} image={pic1} />
+          <CardMedia sx={{ height: "30vh" }} image={pic1} />
           <CardHeader title="Patient" subheader="Patient" />
           <CardContent>
             <Typography variant="body2" color="textSecondary">
@@ -28,7 +28,7 @@ export default function Cards() {
       </Grid>
       <Grid item md={4}>
         <Card elevation={3}>
-          <CardMedia sx={{ height: 300 }} image={pic2} />
+          <CardMedia sx={{ height: "30vh" }} image={pic2} />
           <CardHeader title="Patient" subheader="Patient" />
           <CardContent>
             <Typography variant="body2" color="textSecondary">
@@ -42,7 +42,7 @@ export default function Cards() {
       </Grid>
       <Grid item md={4}>
         <Card elevation={3}>
-          <CardMedia sx={{ height: 300 }} image={pic3} />
+          <CardMedia sx={{ height: "30vh" }} image={pic3} />
           <CardHeader title="Patient" subheader="Patient" />
           <CardContent>
             <Typography variant="body2" color="textSecondary">

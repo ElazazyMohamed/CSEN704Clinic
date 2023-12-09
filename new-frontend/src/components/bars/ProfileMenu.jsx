@@ -6,13 +6,27 @@ import { MenuItem as BaseMenuItem, menuItemClasses } from "@mui/base/MenuItem";
 import { styled } from "@mui/system";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileMenu() {
-  const createHandleMenuClick = (menuItem) => {
-    return () => {
-      console.log(`Clicked on ${menuItem}`);
-    };
+  const navigate = useNavigate();
+  const logout = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/user/logout", {
+        method: "GET",
+        credentials: "include", // Include credentials in the request
+      });
+
+      if (response.ok) {
+        navigate("/"); // Redirect to the home page or login page
+      } else {
+        console.error("Logout failed:", response.error);
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
   };
+
   const user = useSelector((state) => state.user);
   let boolWallet = true;
   if (user.role === "admin") {
@@ -31,12 +45,10 @@ export default function ProfileMenu() {
         <AccountCircleIcon />
       </MenuButton>
       <Menu slots={{ listbox: Listbox }}>
-        <MenuItem onClick={createHandleMenuClick("Profile")}>Profile</MenuItem>
-        {boolWallet ? (
-          <MenuItem onClick={createHandleMenuClick("Profile")}>Wallet</MenuItem>
-        ) : null}
+        <MenuItem>Profile</MenuItem>
+        {boolWallet ? <MenuItem>Wallet</MenuItem> : null}
 
-        <MenuItem onClick={createHandleMenuClick("Log out")}>Log out</MenuItem>
+        <MenuItem onClick={logout}>Log out</MenuItem>
       </Menu>
     </Dropdown>
   );

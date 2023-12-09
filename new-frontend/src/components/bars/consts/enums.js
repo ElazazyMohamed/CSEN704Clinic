@@ -13,13 +13,15 @@ export const NavbarLabel = {
   Packages: "Packages",
   //Admin Navbar
   UserManagement: "User Management",
-  DoctorRegistration: "Doctors' Registration",
+  DoctorRegistration: "Doctors' Registrations",
   HealthPackages: "Health Packages",
   // Doctor Navbar
 };
 
 export const AppbarLabel = {
-  //Patient Appbar
+  /**  * *Patient Appbar
+   */
+
   //Family Members List
   ViewFamilyMembers: "View family members",
   AddFamilyMember: "Add family members",
@@ -30,9 +32,17 @@ export const AppbarLabel = {
   ViewPrescriptions: "View prescriptions",
   AddPrescriptions: "Add prescriptions",
   //Admin Appbar
+
   //User Management List
   AddUser: "Add User",
-  DeleteUser: "Remove User",
+  RemoveUser: "Remove User",
+
+  //Health Packages List
+  AddPackage: "Add Package",
+  DeletePackage: "Delete Package",
+  UpdatePackage: "Update Package",
+
+  //
   //Doctor Appbar
   ViewPatients: "View Patients",
 };

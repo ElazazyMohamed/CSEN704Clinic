@@ -13,10 +13,10 @@ const style = {
   width: 400,
   bgcolor: "background.paper",
   border: "2px solid",
-  borderColor: "error.main",
-
   boxShadow: 24,
   p: 4,
+  display: "flex",
+  flexDirection: "column",
 };
 export default function ErrorModal({ errorMsg, open, close }) {
   return (
@@ -28,20 +28,31 @@ export default function ErrorModal({ errorMsg, open, close }) {
     >
       <Box sx={style}>
         <Typography
-          sx={{ color: "error.main" }}
           id="modal-modal-title"
-          variant="h6"
+          variant="h5"
           component="h2"
+          align="center"
         >
           Sorry, please try again.
         </Typography>
         <Typography
-          sx={{ color: "error.main", mt: 2 }}
+          sx={{ color: "error.main", my: "12px" }}
+          align="center"
           id="modal-modal-description"
         >
+          Error Message:
+          <br />
           {errorMsg}
         </Typography>
-        <Button sx={{ color: "error.main" }} onClick={close}>
+        <Button
+          sx={{
+            width: "50%",
+            alignSelf: "center",
+            backgroundColor: "white",
+            color: "black",
+          }}
+          onClick={close}
+        >
           Retry
         </Button>
       </Box>

@@ -9,7 +9,7 @@ export const AdminNavbarItems = [
     icon: <PeopleIcon />,
     label: "User Management",
     route: "authentication",
-    appbarLabel: AppbarLabel.ViewFamilyMembers,
+    appbarLabel: AppbarLabel.AddUser,
   },
   {
     id: 1,
@@ -19,9 +19,10 @@ export const AdminNavbarItems = [
     appbarLabel: "",
   },
   {
-    id: 3,
+    id: 2,
     icon: <InventoryIcon />,
     label: "Health Packages",
     route: "hosting",
+    appbarLabel: AppbarLabel.AddPackage,
   },
 ];
