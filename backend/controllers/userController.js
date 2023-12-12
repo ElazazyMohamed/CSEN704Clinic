@@ -1,11 +1,75 @@
+import passwordValidator from 'password-validator';
 import userModel from "../models/userModel.js";
-import adminModel from "../models/adminModel.js";
 import doctorModel from "../models/doctorModel.js";
+import adminModel from "../models/adminModel.js";
 import patientModel from "../models/patientModel.js";
 import jwt from "jsonwebtoken"
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
-import passwordValidator from 'password-validator';
+
+
+// (Req 1) As a guest register as a patient using username, name, email, password, date of birth, gender, mobile number, emergency contact ( full name , mobile number)
+export const patientRegister = async (req, res) => {
+    try {
+        const { username, name, email, password, dob, gender, phoneNumber, emergencyContact } = req.body;
+
+        const passwordValidation = validatePassword(password);
+        if(passwordValidation) {
+            return res.status(400).json(passwordValidation);
+        }
+
+        await userModel.create({ username, password, role:"Patient" });
+        await patientModel.create({ username, name, email, dob, gender, phoneNumber, emergencyContact });
+
+        return res.status(200).json({message: "Patient Created Successfully"});
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+};
+
+// (Req 3) As a guest submit a request to register as doctor using username, name, email, password, date of birth, hourly rate, affiliation (hospital), educational background
+export const doctorRegister = async (req, res) => {
+    try {
+        const { username, name, email, password, dob, hourlyRate, affiliation, educationBg } = req.body;
+
+        const passwordValidation = validatePassword(password);
+        if(passwordValidation) {
+            return res.status(400).json(passwordValidation);
+        }
+
+        await userModel.create({ username, password, role:"Doctor" });
+        const doctorReqesting = await doctorModel.create({ username, name, email, dob, hourlyRate, affiliation, educationBg });
+
+        return res.status(200).json({message: "Registration request submitted successfully", "requestId": doctorReqesting._id});
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+};
+
+// (Req 4) As a guest upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
+export const uploadDocuments = async (req, res) => {
+    try {
+        const { medicalId, medicalLicense, medicalDegree } = req.body;
+        const { requestId } = req.params;
+
+        const registeredDoctor = await doctorModel.findOne({ _id: requestId});
+
+        if(!registeredDoctor) {
+            return res.status(400).json({ message: "Wrong request ID"});
+        }
+
+        registeredDoctor.requiredDocuments = {
+            medicalId: medicalId,
+            medicalLicense: medicalLicense,
+            medicalDegree: medicalDegree
+        };
+        registeredDoctor.save();
+
+        return res.status(200).json({message: "Documents uploaded successfully"});
+    } catch (error) {
+      return res.status(400).json({ error: error.message });
+    }
+};
 
 // Creating token after forgotPassword and login
 const createToken = (data) => {

@@ -8,7 +8,7 @@ export default function MyRecords(){
     useEffect(() => {
         // Fetch health records for the specified patient_id
         const fetchHealthRecords = async () => {
-          const response = await fetch("http://localhost:4000/api/patient/viewhealthrecords/", {
+          const response = await fetch("http://localhost:4000/api/patient/viewHealthRecords", {
             credentials: 'include'
           });
     
@@ -55,7 +55,7 @@ export default function MyRecords(){
           };
       
           const res = await axios.post(
-            "http://localhost:4000/api/patient/addhealthrecord",
+            "http://localhost:4000/api/patient/uploadHealthRecord",
             formData,
             axiosConfig
           );
@@ -73,7 +73,7 @@ export default function MyRecords(){
             withCredentials: true,
           };
           await axios.delete(
-            `http://localhost:4000/api/patient/removehealthrecord/${recordId}`,
+            `http://localhost:4000/api/patient/removeHealthRecord/${recordId}`,
             axiosConfig
           );
           sethealthAdded(true);

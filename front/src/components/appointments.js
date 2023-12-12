@@ -15,7 +15,7 @@ export default function AppointmentsTable() {
 
   const handleFetchAppointments = async () => {
     // Make an API request to fetch appointments for the patient
-    const response = await fetch("http://localhost:4000/api/patient/getappointments/" + username, {
+    const response = await fetch("http://localhost:4000/api/patient/getAppointments/", {
       method: "GET",
     });
 

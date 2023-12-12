@@ -4,46 +4,10 @@ import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken"
 import fs from 'fs/promises';
 import path from 'path';
+import { Console } from "console";
 // import stripe from "stripe";
 // import { fileURLToPath } from 'url';
 // import { dirname } from 'path';
-
-// create a new patient
-export const createPatient = async (req, res) => {
-  const { username, name, email, password, dob, gender, phoneNumber, emergencyFullName, 
-          emergencyPhoneNumber, packages } = req.body;
-  try {
-    const user = await userModel.create({ username, password, role:"Patient" });
-    const patient = await patientModel.create({ username, name, email, dob, gender, phoneNumber,
-                                                emergencyFullName, emergencyPhoneNumber, packages });
-    return res.status(200).json({message: "Patient Created Successfully"});
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-// update a patient
-export const updatePatient = async (req, res) => {
-  const { username, doctor, packages } = req.body;
-  try {
-    const updatedUser = await patientModel.findOneAndUpdate( { username }, { doctor, packages }, { new: true });
-    return res.status(200).json({message: "Patient Updatted Successfully"})
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-// delete a patient
-export const deletePatient = async (req, res) => {
-  const { username } = req.body;
-  try {
-    const deletedUser = await userModel.findByIdAndDelete({ username: username});
-    const deletedPatient = await patientModel.findOneAndDelete({ username: username });
-    return res.status(200).json({message: "Patient Deleted Successfully"})
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
 
 // (Req 18) add family members using name, National ID, age, gender and relation to the patient 
 export const setFamilyMember = async (req, res) => {
@@ -54,14 +18,17 @@ export const setFamilyMember = async (req, res) => {
         return res.status(400).json({err : err.message});
       } else {
           const patientusername = decodedToken.username;
-          const { name, nationalID, age, gender, relationToPatient } = req.body;
+          const { name, nationalID, age, gender, relation } = req.body;
           const newFamilyMember = {
-                                    "name": name,
-                                    "nationalID": nationalID,
-                                    "age": age,
-                                    "gender": gender,
-                                    "relationToPatient": relationToPatient
-                                  }
+            name: name,
+            nationalID: nationalID,
+            age: age,
+            gender: gender,
+            email: null,
+            phoneNumber: null,
+            relationToPatient: relation,
+            packageType: null,
+          }
           const patient = await patientModel.findOne({ username: patientusername });
           patient.familyMembers.push(newFamilyMember);
 
@@ -319,38 +286,333 @@ export const selectPrescription = async (req, res) => {
   }
 };
 
-// (Req 2) patient upload/remove documents (PDF,JPEG,JPG,PNG) for my medical history
-export const addhealthrecord = async (req, res) => {
+// (Req 2) patient upload documents (PDF,JPEG,JPG,PNG) for my medical history
+export const uploadHealthRecord = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, "supersecret", async (err, decodedToken) => {
+      if (err) {
+        return res.status(400).json({ message: "You are not logged in." });
+      } else {
+        const patientusername = decodedToken.username;
+        const { date, description, file, doctorNotes } = req.body;
+        const uploadedBy = patientusername;
+        const newHealthRecord = { date, uploadedBy, description, file, doctorNotes };
+
+        const patient = await patientModel.findOne({ username: patientusername});
+        patient.healthrecords.push(newHealthRecord);
+        await patient.save();
+        return res.status(200).json({ message: "Health record added successfully" });
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+};
+
+// (Req 2) patient remove documents (PDF,JPEG,JPG,PNG) for my medical history
+export const removeHealthRecord = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, "supersecret", async (err, decodedToken) => {
+      if (err) {
+        return res.status(400).json({ message: "You are not logged in." });
+      } else {
+        const patientusername = decodedToken.username;
+        const { recordId } = req.params;
+
+        const patient = await patientModel.findOne({ username: patientusername});
+        const healthRecords = patient.healthrecords;
+
+        const recordIndex = healthRecords.findIndex(record => record._id.toString() === recordId);
+        if(recordIndex !== -1) {
+          healthRecords.splice(recordIndex, 1);
+          patient.healthrecords = healthRecords;
+          await patient.save();
+
+          res.status(200).json({ "message": "Health record removed successfully." });
+        } else {
+          return res.status(404).json({ "message": "Health record not found." });
+        }
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({ "error": "Failed to remove health record." });
+  }
+};
+
+// (Req 24) view uploaded health records
+export const viewHealthRecords = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, "supersecret", async (err, decodedToken) => {
+      if (err) {
+        return res.status(400).json({ message: "You are not logged in." });
+      } else {
+        const patientusername = decodedToken.username;
+        const patient = await patientModel.findOne({ username: patientusername });
+        const healthrecords = patient.healthrecords;
+        return res.status(200).json(healthrecords);
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({ "error": "Failed to retrieve health records." });
+  }
+};
+
+// (Req 45) view a list of all my upcoming / past appointments
+export const getAppointments = async (req, res) => {
   try {
     const token = req.cookies.jwt;
     jwt.verify(token, "supersecret", async (err, decodedToken) => {
       if (err) {
         res.status(400).json({ message: "You are not logged in." });
       } else {
-        const username = decodedToken.username;
-        const { description } = req.body;
-        const file = req.file.path;
-        const healthrecord = await patientModel.findOneAndUpdate(
-          { username },
-          { $push: { healthrecords: { file, description, by: "patient" } } },
-          { new: true }
-        );
-        res.status(200).json({ message: "Health record added successfully." });
+        const patientusername = decodedToken.username;
+        const patient = await patientModel.findOne({ username: patientusername });
+        const appointments = patient.appointments;
+        return res.status(200).json(appointments);
       }
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(400).json({ "error": "Failed to retrieve health records." });
   }
 };
 
-export const fetchPatient = async (req, res) => {
+// (Req 46) filter appointments by date or status (upcoming, completed, cancelled, rescheduled)
+export const filterAppointmentsDateStatus = async (req, res) => {
   try {
-    const patient = await patientModel.find();
-    res.status(200).json(patient);
+    const token = req.cookies.jwt;
+    jwt.verify(token, "supersecret", async (err, decodedToken) => {
+      if (err) {
+        return res.status(400).json({ message: "You are not logged in." });
+      } else {
+        const patientusername = decodedToken.username;
+        const { date, status } = req.body;
+        const patient = await patientModel.findOne({ username: patientusername });
+
+        let filteredAppointments = patient.appointments.map((appointment) => ({
+          date: appointment.date.toISOString(),
+          status: appointment.status,
+          doctorName: appointment.doctor.name,
+          type: appointment.type,
+        }));
+
+        if (status !== undefined && status !== "" && status !== null) {
+          filteredAppointments = filteredAppointments.filter((appointment) => appointment.status === status);
+        }
+        if (date !== undefined && date !== "" && date !== null) {
+          filteredAppointments = filteredAppointments.filter((appointment) => appointment.date === date);
+        }
+
+        if (filteredAppointments.length === 0) {
+          return res.status(400).json({ message: "There is no matching appointment" });
+        } else {
+          return res.status(200).json(filteredAppointments);
+        }
+      }
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(500).json({ "error": "Failed to retrieve health records." });
   }
 };
+
+// (Req 67) view the amount in my wallet
+export const getWallet = async (req,res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, "supersecret", async (err, decodedToken) => {
+      const username = decodedToken.username;
+      const patient = await patientModel.findOne({ username: username });
+      return res.json(patient.wallet);
+    });
+  } catch (error) {
+    return res.status(400).json({ "error": "Failed to get amount in wallet" });
+  }
+};
+
+// (Req 19) link another patient's account as a family member using email or phone number stating relation to the patient
+export const linkFamily = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+      if (err) {
+        return res.status(400).json({message:"You are not logged in."})
+      } else {
+        const patientusername = decodedToken.username ;
+        const { email, phoneNumber, relation } = req.body;
+
+        let inverseRealtion;
+        if(relation === "wife") {
+          inverseRealtion = "husband";
+        }
+        if(relation === "husband") {
+          inverseRealtion = "wife";
+        }
+        if(relation === "parent") {
+          inverseRealtion = "child";
+        }
+        if(relation === "child") {
+          inverseRealtion = "parent";
+        }
+
+        const patient = await patientModel.findOne({ username: patientusername });
+
+        let familyMember = await patientModel.findOne({ email: email });
+        if(!familyMember) {
+          familyMember = await patientModel.findOne({ phoneNumber: phoneNumber });
+          if(!familyMember) {
+            return res.status(400).json({ message: "Family member does not exist" });
+          }
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - patient.dob.getFullYear();
+        const me = {
+          name: patient.name,
+          nationalID: null,
+          age: age,
+          gender: patient.gender,
+          email: patient.email,
+          phoneNumber: patient.phoneNumber,
+          relationToPatient: inverseRealtion,
+          packageType: null,
+        }
+        familyMember.familyMembers.push(me);
+        await familyMember.save();
+
+        const familyMemberDetails = {
+          name: null,
+          nationalID: null,
+          age: null,
+          gender: null,
+          email: email,
+          phoneNumber: phoneNumber,
+          relationToPatient: relation,
+          packageType: null,
+        }
+        patient.familyMembers.push(familyMemberDetails);
+        await patient.save();
+        
+        return res.status(200).json({ "Message": "familyMember added successfully",
+                                      "Family Member": familyMember });
+     }
+    });
+  } catch (error) {
+    return res.status(400).json({ "error": "Failed to link a family Member" + error });
+  }
+};
+
+export const payAppointment = async (req, res) => {
+  const { healthPackage } = req.body;
+  const { price } = req.body;
+  healthPackage = healthPackage.toLowerCase();
+  if ( healthPackage == 'silver' )
+    price = (price * 1.1) - (price * 1.4);
+  else if ( healthPackage == 'gold' )
+    price = (price * 1.1) - (price * 1.6);
+  else if ( healthPackage == 'platinum' )
+    price = (price * 1.1) - (price * 1.8);
+  else 
+  price = (price * 1.1);
+  const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items: [{
+        price_data: {
+            currency: 'egp', // or your preferred currency
+            product_data: {
+                name: `Doctor's Appointment`,
+            },
+            unit_amount: price * 100, // convert to cents
+        },
+        quantity: 1,
+    }],
+    mode: 'payment',
+    success_url: `http://localhost:3000/patient/home`,
+    cancel_url: `http://localhost:3000/patient/home`,
+  });
+  res.redirect(303, session.url);
+ };
+
+  export const payPackage = async (req, res) => {
+    const { patient , packageType , familyNationalID , familySubscription }= req.body;
+    let price = 0;
+    const healthPackage = packageType.toLowerCase();
+    let name = '';
+  //const url = 'http://localhost:4000/api/patient/success-payment/patient?='+patient+'/packageType='+packageType+'/familyNationalID='+familyNationalID+'/familySubscription='+familySubscription ;
+    if( healthPackage == 'silver' ) {
+      name = 'Silver Health Package'
+      price = 3600;
+    }
+    if( healthPackage == 'gold' ) {
+      name = 'Gold Health Package'
+      price = 6000;
+    }
+    if( healthPackage == 'platinum' ) {
+      name = 'Platinum Health Package'
+      price = 9000 ;
+    }
+    const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items: [{
+        price_data: {
+          currency: 'egp', // or your preferred currency
+          product_data: {
+            name: name,
+          },
+          unit_amount: price * 100, // convert to cents
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: 'http://localhost:3000/patient/home',
+      cancel_url: `http://localhost:3000/patient/home`,
+    });
+    return res.json({url:session.url});
+};
+
+export const payAppointment2 = async (req, res) => {
+  let price = 100;
+  let name = `Doctor's Appointment`
+  const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items: [{
+        price_data: {
+            currency: 'egp', // or your preferred currency
+            product_data: {
+                name: name,
+            },
+            unit_amount: price * 100, // convert to cents
+        },
+        quantity: 1,
+    }],
+    mode: 'payment',
+    success_url: `http://localhost:3000/patient/home`,
+    cancel_url: `http://localhost:3000/patient/home`,
+  });
+  res.redirect(303, session.url);
+ };
+ export const payPackage2 = async (req, res) => {
+  let price = 9000;
+  let name = `Platinum Package`
+  const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items: [{
+        price_data: {
+            currency: 'egp', // or your preferred currency
+            product_data: {
+                name: name,
+            },
+            unit_amount: price * 100, // convert to cents
+        },
+        quantity: 1,
+    }],
+    mode: 'payment',
+    success_url: `http://localhost:3000/patient/home`,
+    cancel_url: `http://localhost:3000/patient/home`,
+  });
+  res.redirect(303, session.url);
+ };
 
 // export const addPackageToFamilyMember = async (req, res) => {
 //   try {
@@ -370,6 +632,9 @@ export const fetchPatient = async (req, res) => {
 //     res.status(400).json({ message: "Internal server error" });
 //   }
 // };
+
+
+
 
 // //add doctor to a patient
 // export const adddoctor = async (req, res) => {
@@ -394,23 +659,8 @@ export const fetchPatient = async (req, res) => {
 //   }
 // };
 
-// //getappointments
-// export const getappointments = async (req, res) => {
-//   const { username } = req.params;
-//   try {
-//     // Fetch appointments from the database
-//     const patients = await patientModel
-//       .findOne({ username })
-//       .populate("appointments");
-//     if (!patients) {
-//       return res.status(400).json({ error: "Patient not found" });
-//     }
-//     const appointments = patients.appointments;
-//     res.status(200).json(appointments);
-//   } catch (err) {
-//     res.status(400).json({ error: err.message });
-//   }
-// };
+
+
 
 // // 2
 
@@ -445,141 +695,6 @@ export const fetchPatient = async (req, res) => {
 //     res.status(500).json({ error: "Failed to download health record file." });
 //   }
 // };
-
-// // Patient removing health record
-// export const removeHealthRecord = async (req, res) => {
-//   try {
-//     const token = req.cookies.jwt;
-//     jwt.verify(token, "supersecret", async (err, decodedToken) => {
-//       if (err) {
-//         res.status(400).json({ message: "You are not logged in." });
-//       } else {
-//         const username = decodedToken.username;
-//         const { recordId } = req.params; // Assuming the record ID is passed as a URL parameter
-
-//         // Find the patient and pull the health record from the array
-//         const updatedPatient = await patientModel.findOneAndUpdate(
-//           { username },
-//           { $pull: { healthrecords: { _id: recordId } } },
-//           { new: true }
-//         );
-
-//         if (!updatedPatient) {
-//           // If the patient is not found or the health record does not exist
-//           return res.status(404).json({ message: "Health record not found." });
-//         }
-
-//         res
-//           .status(200)
-//           .json({ message: "Health record removed successfully." });
-//       }
-//     });
-//   } catch (error) {
-//     console.error("Error removing health record:", error);
-//     res.status(400).json({ error: "Failed to remove health record." });
-//   }
-// };
-
-// //view health records for the current patient logged in
-// export const viewHealthRecords = async (req, res) => {
-//   try {
-//     const token = req.cookies.jwt;
-//     jwt.verify(token, "supersecret", async (err, decodedToken) => {
-//       if (err) {
-//         res.status(400).json({ message: "You are not logged in." });
-//       } else {
-//         const username = decodedToken.username;
-//         const patient = await patientModel.findOne({ username });
-//         const healthrecords = patient.healthrecords;
-//         res.status(200).json(healthrecords);
-//       }
-//     });
-//   } catch (error) {
-//     console.error("Error retrieving health records:", error);
-//     res.status(500).json({ error: "Failed to retrieve health records." });
-//   }
-// }
-
-//  //helping func
-//  //view all patients there is
-//  export const viewAllPatients = async (req,res) => {
-//   const patients = await patientModel.find({});
-//   res.json(patients);
-// }
-// export const viewAllDoctors = async (req,res) => {
-//   const doctors = await doctorModel.find({});
-//   res.json(doctors);
-// }
-
-// export const payAppointment = async (req, res) => {
-//   const { healthPackage } = req.body;
-//   const { price } = req.body;
-//   healthPackage = healthPackage.toLowerCase();
-//   if ( healthPackage == 'silver' )
-//     price = (price * 1.1) - (price * 1.4);
-//   else if ( healthPackage == 'gold' )
-//     price = (price * 1.1) - (price * 1.6);
-//   else if ( healthPackage == 'platinum' )
-//     price = (price * 1.1) - (price * 1.8);
-//   else 
-//   price = (price * 1.1);
-//   const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
-//     const session = await stripeInstance.checkout.sessions.create({
-//       line_items: [{
-//         price_data: {
-//             currency: 'egp', // or your preferred currency
-//             product_data: {
-//                 name: `Doctor's Appointment`,
-//             },
-//             unit_amount: price * 100, // convert to cents
-//         },
-//         quantity: 1,
-//     }],
-//     mode: 'payment',
-//     success_url: `http://localhost:3000/patient/home`,
-//     cancel_url: `http://localhost:3000/patient/home`,
-//   });
-//   res.redirect(303, session.url);
-//  };
-//  export const payPackage = async (req, res) => {
-//   const { patient , packageType , familyNationalID , familySubscription }= req.body;
-//   let price = 0;
-//   const healthPackage = packageType.toLowerCase();
-//   let name = '';
-//   //const url = 'http://localhost:4000/api/patient/success-payment/patient?='+patient+'/packageType='+packageType+'/familyNationalID='+familyNationalID+'/familySubscription='+familySubscription ;
-//   if ( healthPackage == 'silver' )
-//   {
-//     name = 'Silver Health Package'
-//     price = 3600;
-//   }
-//   else if ( healthPackage == 'gold' )
-//   {
-//     name = 'Gold Health Package'
-//     price = 6000;
-//   }  
-//   else if ( healthPackage == 'platinum' )
-//   {
-//     name = 'Platinum Health Package'
-//     price = 9000 ;
-//   }
-//   const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
-//     const session = await stripeInstance.checkout.sessions.create({
-//       line_items: [{
-//         price_data: {
-//             currency: 'egp', // or your preferred currency
-//             product_data: {
-//                 name: name,
-//             },
-//             unit_amount: price * 100, // convert to cents
-//         },
-//         quantity: 1,
-//     }],
-//     mode: 'payment',
-//     success_url: 'http://localhost:3000/patient/home',
-//     cancel_url: `http://localhost:3000/patient/home`,
-//   });
-//   res.json({url:session.url});
-//  }
 
 //    export const reserveappointment = async (req, res) => {
 //  try {
@@ -634,100 +749,6 @@ export const fetchPatient = async (req, res) => {
 // }
 
 
-// export const getWallet = async (req,res) => {
-//       const token = req.cookies.jwt;
-//       jwt.verify(token, "supersecret", async (err, decodedToken) => {
-//         const username = decodedToken.username;
-//         const patient = await patientModel.findOne({ username: username });
-//         res.json(patient.wallet);
-//     });
-//  }
 
-//  export const linkFamily = async (req, res) => {
-//    const token = req.cookies.jwt;
-
-//    jwt.verify(token, 'supersecret', async (err, decodedToken) => {
-//      if (err) {
-//        res.status(400).json({message:"You are not logged in."})
-//      } else {
-//        const username = decodedToken.username ;
-//     try {
-
-//     const {role,email,number} = req.body; // The new family member data from the request body
-
-//     // Find the patient by username
-//     const patient = await patientModel.findOne({ username: username });
-//     let familyMember = await patientModel.findOne({email:email}); 
-//     if(!familyMember)
-//     familyMember = await patientModel.findOne({phoneNumber:number})
-//     if (!familyMember)
-//       return res.status(404).json({ message: "Patient not found" });
-//     if (!patient) {
-//       return res.status(404).json({ message: "Patient not found" });
-//     }
-//     familyMember = await patient.familyMembers.create(
-//       {
-//         relationToPatient: role,
-//         name: familyMember.name,
-//         gender: familyMember.gender,
-//         age: familyMember.dob
-//       }
-//     )
-//     // Add the new family member to the patient's familyMembers array
-//     patient.familyMembers.push(familyMember);
-
-//     // Save the updated patient document
-//     await patient.save();
-
-//     res.status(200).json(patient);
-//   } catch (error) {
-//     console.error("Error adding family member:", error);
-//     res.status(400).json({ message: "Internal server error" });
-//   }
-// }
-// });
-// };
-// export const payAppointment2 = async (req, res) => {
-//   let price = 100;
-//   let name = `Doctor's Appointment`
-//   const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
-//     const session = await stripeInstance.checkout.sessions.create({
-//       line_items: [{
-//         price_data: {
-//             currency: 'egp', // or your preferred currency
-//             product_data: {
-//                 name: name,
-//             },
-//             unit_amount: price * 100, // convert to cents
-//         },
-//         quantity: 1,
-//     }],
-//     mode: 'payment',
-//     success_url: `http://localhost:3000/patient/home`,
-//     cancel_url: `http://localhost:3000/patient/home`,
-//   });
-//   res.redirect(303, session.url);
-//  };
-//  export const payPackage2 = async (req, res) => {
-//   let price = 9000;
-//   let name = `Platinum Package`
-//   const stripeInstance = new stripe(process.env.STRIPE_PRIVATE_KEY);
-//     const session = await stripeInstance.checkout.sessions.create({
-//       line_items: [{
-//         price_data: {
-//             currency: 'egp', // or your preferred currency
-//             product_data: {
-//                 name: name,
-//             },
-//             unit_amount: price * 100, // convert to cents
-//         },
-//         quantity: 1,
-//     }],
-//     mode: 'payment',
-//     success_url: `http://localhost:3000/patient/home`,
-//     cancel_url: `http://localhost:3000/patient/home`,
-//   });
-//   res.redirect(303, session.url);
-//  };
 
 

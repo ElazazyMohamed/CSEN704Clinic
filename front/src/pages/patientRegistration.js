@@ -26,7 +26,7 @@ function PatientRegistrationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:4000/api/patient", {
+    const response = await fetch("http://localhost:4000/api/patient/createPatient", {
       method: "POST",
       body: JSON.stringify(formData),
       headers: {

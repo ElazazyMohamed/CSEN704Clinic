@@ -2,13 +2,14 @@ import React from "react";
 import { useEffect, useState } from "react";
 import FamilyMembersTable from "../components/familymemberstable";
 
+
 export default function PatientPackages() {
   const [packages, setPackages] = useState<Array<Package>>([]);
   const [familySelected, setFamilySelected] = useState<Family>();
   const [patient, setPatient] = useState<any>(null);
   const [url,setUrl] = useState<any>(null);
   useEffect(() => {
-    fetch("http://localhost:4000/api/package", {
+    fetch("http://localhost:4000/api/package/", {
       method: "GET",
       credentials: "include",
     })

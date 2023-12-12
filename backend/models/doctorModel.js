@@ -1,127 +1,127 @@
 import mongoose from "mongoose";
 
-const availabilitySchema = new mongoose.Schema({
-    date: {
-      type: Date,
-      required: true,
-    },
-    time: {
-      type: String,
-      required: true,
-    },
-  });
+// const availabilitySchema = new mongoose.Schema({
+//     date: {
+//       type: Date,
+//       required: true,
+//     },
+//     time: {
+//       type: String,
+//       required: true,
+//     },
+//   });
 
-  const messageSchema = new mongoose.Schema({
-    sender: {
-      type: String,  
-      required: true,
-    },
-    receiver: {
-      type: String,   
-      required: true,
-    },
-    content: {
-      type: String,
-      required: true,
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now,
-    },
-  });
+//   const messageSchema = new mongoose.Schema({
+//     sender: {
+//       type: String,  
+//       required: true,
+//     },
+//     receiver: {
+//       type: String,   
+//       required: true,
+//     },
+//     content: {
+//       type: String,
+//       required: true,
+//     },
+//     timestamp: {
+//       type: Date,
+//       default: Date.now,
+//     },
+//   });
   
-  const chatSchema = new mongoose.Schema({
-    firstPerson: {
-      type: String,   //  firstPerson
-      required: true,
-    },
-    secondPerson: {
-      type: String,   // secondPerson
-      required: true,
-    },
-    messages: [messageSchema] // Array of messages
-  });
+//   const chatSchema = new mongoose.Schema({
+//     firstPerson: {
+//       type: String,   //  firstPerson
+//       required: true,
+//     },
+//     secondPerson: {
+//       type: String,   // secondPerson
+//       required: true,
+//     },
+//     messages: [messageSchema] // Array of messages
+//   });
 
 const doctorSchema = new mongoose.Schema({
-    
   username: {
     type: String,
-    required: true,
-    unique: true,
-    minlength: 3,
 }, 
   name: {
       type: String,
-      required: true,
   }, 
   email: {
     type: String,
-    required: true,
-    unique: true,
   }, 
   password: {
     type: String,
-    required: true,
-    minlength: 8,
   }, 
   dob: {
     type : Date ,
-  }, 
-  gender: {
-    type: String,
-    required: true,
-  },
-  phoneNumber: {
-    type: Number,
-    required: true,
-    minlength: 11,
-  }, 
+  },  
   hourlyRate: {
     type: Number,
-    required: true,
   },
   affiliation: {
     type: String,
-    required: true,
   },
   educationBg: {
-    type: String,
-    required: true,
-  },
-  speciality: {
     type: String,
   },
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending",
+    enum: ["registered", "pending", "approved", "rejected"],
+    default: "registered",
   },
-  wallet:{
-    type: Number,
-    default: 0,
-  },
-  availableTimeSlots: [availabilitySchema],
-  availability: [availabilitySchema],
-  appointments: [
-    {
-      date: {
-        type: Date,
-        required: true,
-      },
-      status: {
-        type: String,
-        required: true,
-      },
-      patient: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Patient",
-      },
-      type :{
-        type:String
-      }
+  requiredDocuments: {
+    medicalId: {
+      data: Buffer,
+      contentType: String,
     },
+    medicalLicense: {
+      data: Buffer,
+      contentType: String,
+    },
+    medicalDegree: {
+      data: Buffer,
+      contentType: String,
+    },
+    default: {},
+  },
+  registeredPatients: [
+    {
+      type: String,
+    }
   ],
-  chats:[chatSchema],
+  appointments: {
+    appointment: [
+      {
+        date: {
+          type: Date,
+        },
+        status: {
+          type: String,
+          enum: ["upcoming", "completed", "cancelled", "rescheduled"],
+        },
+        type: {
+          type: String,
+          enum: ["self", "familyMember"],
+        },
+        patient: { // Patient Name
+          type: String
+        },
+      }
+    ],
+    default: [],
+  },
+  // speciality: {
+  //   type: String,
+  // },
+  // wallet:{
+  //   type: Number,
+  //   default: 0,
+  // },
+  // availability: [availabilitySchema],
+  // chats:[chatSchema],
 });
 
 export default mongoose.model('Doctor',doctorSchema)

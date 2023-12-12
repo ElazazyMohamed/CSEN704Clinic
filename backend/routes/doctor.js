@@ -1,23 +1,37 @@
 import express from "express";
-import { fetchPatients, createDoctor, fetchPendingDoctor ,getappointments, deleteDoctor, fetchDoctor, viewHealthRecords, addhealthrecord, updateDoctor, addAvailableTimeSlot, getWallet,reservefollowup } from "../controllers/doctorController.js";
+import { updateDoctor, searchPatient, getRegisteredPatients, filterPatientsUpcomingAppointments, selectPatient, viewRegisteredPatient, getappointments, viewHealthRecords, addhealthrecord, addAvailableTimeSlot, getWallet,reservefollowup } from "../controllers/doctorController.js";
 import {viewContract, acceptContract} from "../controllers/employmentContractController.js";
 
 //router initialization
 const router = express.Router();
 
+// (Req 14) edit/ update my email, hourly rate or affiliation (hospital)
+router.patch('/updateDoctor',updateDoctor);
+
+// (Req 34) search for a patient by name
+router.get("/searchPatient", searchPatient);
+
+// (Req 33) view a list of all my patients
+router.get("/getRegisteredPatients", getRegisteredPatients);
+
+router.get("/getRegisteredPatients/filterPatientsUpcomingAppointments", filterPatientsUpcomingAppointments);
+
+router.get("/getRegisteredPatients/selectPatient", selectPatient);
+
+router.get("/getRegisteredPatients/filterPatientsUpcomingAppointments/selectPatient", selectPatient);
+
+router.get("/getRegisteredPatients/selectPatient/viewRegisteredPatient", viewRegisteredPatient)
+
+
+
+
 router.post('/reservefollowup',reservefollowup)
-
-router.get('/',fetchDoctor);
-
-router.get('/getpatients',fetchPatients);
 
 router.get('/getappointments',getappointments)
 
-router.post('/',createDoctor);
+// router.post('/',createDoctor);
 
-router.delete('/',deleteDoctor);
-
-router.patch('/',updateDoctor)
+// router.delete('/',deleteDoctor);
 
 //16
 router.get("/:doctorId/:clinicId", viewContract);
