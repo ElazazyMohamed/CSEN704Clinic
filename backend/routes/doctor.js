@@ -1,50 +1,57 @@
 import express from "express";
-import { updateDoctor, searchPatient, getRegisteredPatients, filterPatientsUpcomingAppointments, selectPatient, viewRegisteredPatient, getappointments, viewHealthRecords, addhealthrecord, addAvailableTimeSlot, getWallet,reservefollowup } from "../controllers/doctorController.js";
-import {viewContract, acceptContract} from "../controllers/employmentContractController.js";
+import { uploadDocuments, updateDoctor, searchPatient, getRegisteredPatients, filterPatientsUpcomingAppointments, 
+    selectPatient, viewRegisteredPatient, acceptContract, viewContract } from "../controllers/doctorController.js";
 
 //router initialization
 const router = express.Router();
 
+// (Req 4) As a doctor upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
+router.post("/upload-documents", uploadDocuments);
+
 // (Req 14) edit/ update my email, hourly rate or affiliation (hospital)
-router.patch('/updateDoctor',updateDoctor);
+router.patch('/update-doctor',updateDoctor);
 
 // (Req 34) search for a patient by name
-router.get("/searchPatient", searchPatient);
+router.get("/search-patient", searchPatient);
 
 // (Req 33) view a list of all my patients
-router.get("/getRegisteredPatients", getRegisteredPatients);
+router.get("/registered-patients", getRegisteredPatients);
 
-router.get("/getRegisteredPatients/filterPatientsUpcomingAppointments", filterPatientsUpcomingAppointments);
+// (Req 35) filter patients based on upcoming appointments
+router.post("/filter/upcoming-appointments", filterPatientsUpcomingAppointments);
 
-router.get("/getRegisteredPatients/selectPatient", selectPatient);
+// (Req 36) select a patient from the list of patients
+router.post("/select-patient", selectPatient);
 
-router.get("/getRegisteredPatients/filterPatientsUpcomingAppointments/selectPatient", selectPatient);
+// (Req 25) view information and health records of patient registered with me
+router.get("/view-patient-record", viewRegisteredPatient)
 
-router.get("/getRegisteredPatients/selectPatient/viewRegisteredPatient", viewRegisteredPatient)
+// (Req 16) view the employment contract
+router.get("/view-contract", viewContract);
 
+// (Req 16) accept the employment contract
+router.patch("accept-contract", acceptContract);
 
+// router.post('/reservefollowup',reservefollowup)
 
+// router.get('/getappointments',getappointments)
 
-router.post('/reservefollowup',reservefollowup)
+// // router.post('/',createDoctor);
 
-router.get('/getappointments',getappointments)
+// // router.delete('/',deleteDoctor);
 
-// router.post('/',createDoctor);
+// //16
+// router.get("/:doctorId/:clinicId", viewContract);
+// router.patch("/accept/:doctorId/:clinicId", acceptContract);
 
-// router.delete('/',deleteDoctor);
+// //17
+// // Add a new route for adding available time slots
+// router.post("/add-available-time-slot", addAvailableTimeSlot);
 
-//16
-router.get("/:doctorId/:clinicId", viewContract);
-router.patch("/accept/:doctorId/:clinicId", acceptContract);
+// router.get("/wallet",getWallet);
 
-//17
-// Add a new route for adding available time slots
-router.post("/add-available-time-slot", addAvailableTimeSlot);
-
-router.get("/wallet",getWallet);
-
-//24
-router.get("/healthrecords/:patientId", viewHealthRecords);
-router.post("/healthrecords/:patientId", addhealthrecord);
+// //24
+// router.get("/healthrecords/:patientId", viewHealthRecords);
+// router.post("/healthrecords/:patientId", addhealthrecord);
 
 export default router

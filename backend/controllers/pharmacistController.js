@@ -1,6 +1,37 @@
-// import doctorModel from "../models/pharmacistModel.js";
-// import medicineModel from "../models/medicineModel.js"
+import pharmacistModel from "../models/pharmacistModel";
+
 // import multer from "multer";
+
+// (Req 9 pharmacy) upload and submit required documents upon registration such as ID, pharmacy degree anf Working licenses  
+export const uploadDocuments = async(req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+            if (err) {
+                res.status(400).json({message:"You are not logged in."})
+            } else {
+                const { pharmacyId, pharmacyLicense, pharmacyDegree } = req.body;
+                const pharmacistusername = decodedToken.username;
+
+                const registeredPharmacist = await pharmacistModel.findOne({ username: pharmacistusername });
+                if(!registeredPharmacist) {
+                    return res.status(400).json({ message: "Wrong request ID"});
+                }
+
+                registeredPharmacist.requiredDocuments = {
+                    pharmacyId: pharmacyId,
+                    pharmacyLicense: pharmacyLicense,
+                    pharmacyDegree: pharmacyDegree
+                };
+                registeredPharmacist.save();
+
+                return res.status(200).json({message: "Documents uploaded successfully, waiting documents review"});
+            }
+        });
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+};
 
 // const storage = multer.diskStorage({
 //   destination: (req, file, cb) => {

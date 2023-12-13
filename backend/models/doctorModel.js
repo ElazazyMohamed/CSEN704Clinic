@@ -69,7 +69,7 @@ const doctorSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["registered", "pending", "approved", "rejected"],
+    enum: ["registered", "pending", "accepted", "rejected"],
     default: "registered",
   },
   requiredDocuments: {
@@ -85,32 +85,43 @@ const doctorSchema = new mongoose.Schema({
       data: Buffer,
       contentType: String,
     },
+    speciality: {
+      type: String,
+    },
+    default: {},
+  },  
+  employmentContract: {
+    markup: {
+      type: Number,
+    },
+    doctorAcceptance: {
+        type: Boolean,
+    },
+    adminAcceptance: {
+        type: Boolean,
+    },
     default: {},
   },
-  registeredPatients: [
-    {
-      type: String,
-    }
-  ],
+  registered: {
+    patients: [],
+  },
   appointments: {
-    appointment: [
-      {
+    appointment: [{
         date: {
-          type: Date,
+            type: Date,
         },
         status: {
-          type: String,
-          enum: ["upcoming", "completed", "cancelled", "rescheduled"],
+            type: String,
+            enum: ["upcoming", "completed", "cancelled", "rescheduled"],
         },
         type: {
-          type: String,
-          enum: ["self", "familyMember"],
+            type: String,
+            enum: ["self", "familyMember"],
         },
-        patient: { // Patient Name
-          type: String
+        patient: {
+            type: String,
         },
-      }
-    ],
+    },],
     default: [],
   },
   // speciality: {

@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import adminModel from "../models/adminModel.js";
 import patientModel from "../models/patientModel.js";
+import pharmacistModel from "../models/pharmacistModel.js";
 import jwt from "jsonwebtoken"
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
@@ -40,34 +41,28 @@ export const doctorRegister = async (req, res) => {
         await userModel.create({ username, password, role:"Doctor" });
         const doctorReqesting = await doctorModel.create({ username, name, email, dob, hourlyRate, affiliation, educationBg });
 
-        return res.status(200).json({message: "Registration request submitted successfully", "requestId": doctorReqesting._id});
+        return res.status(200).json({message: "Registration request submitted successfully, waiting for required documents upload", "requestId": doctorReqesting._id});
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
 };
 
-// (Req 4) As a guest upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
-export const uploadDocuments = async (req, res) => {
+// (Req 2 pharmacy) submit a request to register as a pharmacist using username, name, email, password, date of birth, hourly rate, affiliation (hospital), educational background, 
+export const pharmacistRegister = async(req, res) => {
     try {
-        const { medicalId, medicalLicense, medicalDegree } = req.body;
-        const { requestId } = req.params;
-
-        const registeredDoctor = await doctorModel.findOne({ _id: requestId});
-
-        if(!registeredDoctor) {
-            return res.status(400).json({ message: "Wrong request ID"});
+        const { username, name, email, password, dob, hourlyRate, affiliation, educationBg } = req.body;
+        
+        const passwordValidation = validatePassword(password);
+        if(passwordValidation) {
+            return res.status(400).json(passwordValidation);
         }
 
-        registeredDoctor.requiredDocuments = {
-            medicalId: medicalId,
-            medicalLicense: medicalLicense,
-            medicalDegree: medicalDegree
-        };
-        registeredDoctor.save();
+        await userModel.create({ username, password, role:"Pharmacist" });
+        const pharmacistReqesting = await pharmacistModel.create({ username, name, email, dob, hourlyRate, affiliation, educationBg });
 
-        return res.status(200).json({message: "Documents uploaded successfully"});
+        return res.status(200).json({message: "Registration request submitted successfully, waiting for required documents upload", "requestId": pharmacistReqesting._id});
     } catch (error) {
-      return res.status(400).json({ error: error.message });
+        return res.status(400).json({ error: error.message });
     }
 };
 

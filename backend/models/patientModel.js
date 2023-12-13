@@ -145,50 +145,53 @@ const patientSchema = new mongoose.Schema({
   emergencyContact: {
     fullName: String,
     phoneNumber: String,
+    relation: {
+      type: String,
+      enum: ["parent", "child", "wife", "husband"],
+    },
+  },
+  registered: {
+    doctors: [],
   },
   health: {
-    records:[
-      {
-        date: {
-          type: Date,
-          default: Date.now(),
-        },
-        uploadedBy: {
-          type: String, // Username or ID of the healthcare professional uploading the record
-        },
-        description: {
-          type: String,
-        },
-        file: {
-          data: Buffer, // Binary data of the file (e.g., medical report, lab results)
-          contentType: String, // MIME type of the file (e.g., application/pdf, image/jpeg)
-        },
-        doctorNotes: {
-          type: String,
-        },
+    records:[{
+      date: {
+        type: Date,
+        default: Date.now(),
       },
-    ],
+      uploadedBy: {
+        type: String, 
+      },
+      description: {
+        type: String,
+      },
+      file: {
+        data: Buffer, 
+        contentType: String, 
+      },
+      doctorNotes: {
+        type: String,
+      },
+    },],
     default: [],
   },
   appointments: {
-    appointment: [
-      {
+    appointment: [{
         date: {
-          type: Date,
+            type: Date,
         },
         status: {
-          type: String,
-          enum: ["upcoming", "completed", "cancelled", "rescheduled"],
+            type: String,
+            enum: ["upcoming", "completed", "cancelled", "rescheduled"],
         },
         type: {
-          type: String,
-          enum: ["self", "familyMember"],
+            type: String,
+            enum: ["self", "familyMember"],
         },
-        patient: { // Patient Name
-          type: String
+        patient: {
+            type: String,
         },
-      }
-    ],
+    }],
     default: [],
   },
   // packageType: {
