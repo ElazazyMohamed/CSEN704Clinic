@@ -167,18 +167,27 @@ const patientSchema = new mongoose.Schema({
       },
       file: {
         data: Buffer, 
-        contentType: String, 
+        contentType: String,
+        required: false,
       },
       doctorNotes: {
         type: String,
       },
-    },],
+    }],
     default: [],
   },
   appointments: {
     appointment: [{
         date: {
-            type: Date,
+            type: Date, // Date (ISO format); "2023-12-31" 
+        },
+        day: {
+          type: String,
+          enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+        },
+        slot: {
+          type: String,
+          enum: ["1st", "2nd", "3rd", "4th", "5th"],
         },
         status: {
             type: String,
@@ -188,12 +197,15 @@ const patientSchema = new mongoose.Schema({
             type: String,
             enum: ["self", "familyMember"],
         },
-        patient: {
+        doctor: {
             type: String,
         },
     }],
     default: [],
   },
+  prescription: {
+
+  }
   // packageType: {
   //   type: String,
   //   required: false,

@@ -3,7 +3,13 @@ import multer from "multer";
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     //where to store the file
-    cb(null, "uploads/");
+
+    // Ensure the destination folder exists; create it if not
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    
+    cb(null, "uploads");
   },
   filename: function (req, file, cb) {
     cb(null, new Date().toISOString() + file.originalname);

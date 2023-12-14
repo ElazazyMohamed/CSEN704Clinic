@@ -1,6 +1,6 @@
 import pharmacistModel from "../models/pharmacistModel";
-
-// import multer from "multer";
+import medicineModel from "../models/medicineModel";
+import multer from "multer";
 
 // (Req 9 pharmacy) upload and submit required documents upon registration such as ID, pharmacy degree anf Working licenses  
 export const uploadDocuments = async(req, res) => {
@@ -33,6 +33,23 @@ export const uploadDocuments = async(req, res) => {
     }
 };
 
+// Using Multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    },
+});
+
+const upload = multer({ storage: storage });
+
+// (Req 16) As a pharmacist add a medicine with its details (active ingredients) , price and available quantity
+export const addMedicine = async(req, res) => {
+    
+};
+
 // const storage = multer.diskStorage({
 //   destination: (req, file, cb) => {
 //       cb(null, "uploads/"); //store uploaded documents
@@ -44,57 +61,6 @@ export const uploadDocuments = async(req, res) => {
 // });
 
 // const upload = multer({ storage: storage });
-// export const createPharmacist = async (req, res) => {
-//   const {
-//     username,
-//     name,
-//     email,
-//     password,
-//     dob,
-//     gender,
-//     phoneNumber,
-//     hourlyRate,
-//     affiliation,
-//     educationBg
-//   } = req.body;
-  
-//  // Handle file uploads for documents
-// //  upload.fields([
-// //   { name: "idDocument", maxCount: 1 },
-// //   { name: "pharmacyDegreeDocument", maxCount: 1 },
-// //   { name: "workingLicenseDocument", maxCount: 1 },
-// // ])(req, res, async (err) => {
-// //   if (err) {
-// //       return res.status(400).json({ error: "File upload error." });
-// //   }
-
-// //   // Get file paths from the uploaded documents
-// //   const idDocument = req.files["idDocument"][0].path;
-// //   const pharmacyDegreeDocument = req.files["pharmacyDegreeDocument"][0].path;
-// //   const workingLicenseDocument = req.files["workingLicenseDocument"][0].path;
-
-//   try {
-//     const doctor = await pharmacistModel.create({
-//       username,
-//       name,
-//       email,
-//       password,
-//       dob,
-//       gender,
-//       phoneNumber,
-//       hourlyRate,
-//       affiliation,
-//       educationBg,
-//       // idDocument,
-//       // pharmacyDegreeDocument,
-//       // workingLicenseDocument,
-//     });
-//     res.status(200).json(doctor);
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
-
 
 // // req.16 , add medicine 
 // export const addMedicine = async (req, res) => {

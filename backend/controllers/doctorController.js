@@ -2,7 +2,7 @@ import doctorModel from "../models/doctorModel.js";
 import patientModel from "../models/patientModel.js";
 import jwt from 'jsonwebtoken';
 
-// (Req 4) As a guest upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
+// (Req 4) As a doctor upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
 export const uploadDocuments = async (req, res) => {
   try {
       const { medicalId, medicalLicense, medicalDegree, speciality, requestId } = req.body;
@@ -18,7 +18,7 @@ export const uploadDocuments = async (req, res) => {
           medicalDegree: medicalDegree,
           speciality: speciality
       };
-      registeredDoctor.save();
+      await registeredDoctor.save();
 
       return res.status(200).json({message: "Documents uploaded successfully, waiting documents review and employment contract"});
   } catch (error) {
@@ -26,7 +26,7 @@ export const uploadDocuments = async (req, res) => {
   }
 };
 
-// (Req 14) edit/ update my email, hourly rate or affiliation (hospital)
+// (Req 14) As a doctor edit/ update my email, hourly rate or affiliation (hospital)
 export const updateDoctor = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -61,7 +61,7 @@ export const updateDoctor = async (req, res) => {
   }
 };
 
-// (Req 34) search for a patient by name
+// (Req 34) As a doctor search for a patient by name
 export const searchPatient = async(req, res) => {
   try {
     const { patientName } = req.body;
@@ -75,7 +75,7 @@ export const searchPatient = async(req, res) => {
   }
 };
 
-// (Req 33) view a list of all my patients
+// (Req 33) As a doctor view a list of all my patients
 export const getRegisteredPatients = async(req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -97,7 +97,7 @@ export const getRegisteredPatients = async(req, res) => {
   }
 };
 
-// (Req 35) filter patients based on upcoming appointments
+// (Req 35) As a doctor filter patients based on upcoming appointments
 export const filterPatientsUpcomingAppointments = async(req, res) => {
   try {
     const { patients } = req.body;
@@ -115,7 +115,7 @@ export const filterPatientsUpcomingAppointments = async(req, res) => {
   }
 };
 
-// (Req 36) select a patient from the list of patients
+// (Req 36) As a doctor select a patient from the list of patients
 export const selectPatient = async(req, res) => {
   try {
     const { patients, patientId } = req.body;
@@ -127,7 +127,7 @@ export const selectPatient = async(req, res) => {
   }
 };
 
-// (Req 25) view information and health records of patient registered with me
+// (Req 25) As a doctor view information and health records of patient registered with me
 export const viewRegisteredPatient = async(req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -156,7 +156,7 @@ export const viewRegisteredPatient = async(req, res) => {
   }
 };
 
-// (Req 16) view the employment contract
+// (Req 16) As a doctor view the employment contract
 export const viewContract = async(req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -180,7 +180,7 @@ export const viewContract = async(req, res) => {
   }
 };
 
-// (Req 16) accept the employment contract
+// (Req 16) As a doctor accept the employment contract
 export const acceptContract = async(req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -192,8 +192,100 @@ export const acceptContract = async(req, res) => {
         const doctor = await doctorModel.findOne({ username: doctorusername});
         doctor.status = "pending";
         doctor.employmentContract.doctorAcceptance = true;
-        doctor.save();
+        await doctor.save();
         return res.status(200).json({ message: "Contract accepted successfully, waiting for approval"});
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({error: error.message});
+  }
+};
+
+// (Req 17) As a doctor add my available time slots for appointments
+export const addAvailableTimeSlots = async(req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+      if (err) {
+        res.status(400).json({message:"You are not logged in."})
+      } else {
+        const doctorusername = decodedToken.username;
+        const { slots } = req.body;
+        const doctor = await doctorModel.findOne({ username: doctorusername });
+        
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
+        const slotNames = ["1st", "2nd", "3rd", "4th", "5th"];
+
+        for(let i = 0; i < 5; i++) {
+          for(let j = 0; j < 5; j++) {
+            if(slots[i][j] === true) {
+              const workingSlots = {
+                day: days[i],
+                slot: slotNames[j],
+              }
+
+              doctor.workingSlots.push(workingSlots);
+            }
+          }
+        }
+        await doctor.save();
+
+        return res.status(200).json({ message: "Available time slots added successfully." });
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({error: error.message});
+  }
+};
+
+// (Req 60) As a doctor add new health records for a patient
+export const addPatientHealthRecord = async(req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+      if (err) {
+        res.status(400).json({message:"You are not logged in."})
+      } else {
+        const doctorusername = decodedToken.username;    
+        const { date, description, fileData, fileType, doctorNotes, patientusername } = req.body;
+        
+        const patient = await patientModel.findOne({ username: patientusername, 'registered.doctors': doctorusername });
+        if(!patient) {
+          return res.status(403).json({ message: "You are not authorized to add health records for this patient." });
+        }
+        
+        const newHealthRecord = {
+          date: date,
+          uploadedBy: doctorusername,
+          description: description,
+          file: {
+            data: fileData,
+            contentType: fileType,
+          },
+          doctorNotes: doctorNotes 
+        };
+
+        patient.health.records.push(newHealthRecord);
+        await patient.save();
+
+        return res.status(200).json({ message: "Health record added successfully." });
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({error: error.message});
+  }
+};
+
+// (Req 51) As a doctor schedule a follow-up for a patient
+export const followUpAppointment =  async(req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+      if (err) {
+        res.status(400).json({message:"You are not logged in."})
+      } else {
+        const doctorusername = decodedToken.username;
+        const { patientusername,  } = req.body;
       }
     });
   } catch (error) {

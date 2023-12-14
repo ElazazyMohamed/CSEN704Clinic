@@ -1,6 +1,6 @@
 import express from "express";
 import { uploadDocuments, updateDoctor, searchPatient, getRegisteredPatients, filterPatientsUpcomingAppointments, 
-    selectPatient, viewRegisteredPatient, acceptContract, viewContract } from "../controllers/doctorController.js";
+    selectPatient, viewRegisteredPatient, acceptContract, viewContract, addAvailableTimeSlot } from "../controllers/doctorController.js";
 
 //router initialization
 const router = express.Router();
@@ -8,7 +8,7 @@ const router = express.Router();
 // (Req 4) As a doctor upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
 router.post("/upload-documents", uploadDocuments);
 
-// (Req 14) edit/ update my email, hourly rate or affiliation (hospital)
+// (Req 14) As a doctor edit/ update my email, hourly rate or affiliation (hospital)
 router.patch('/update-doctor',updateDoctor);
 
 // (Req 34) search for a patient by name
@@ -30,7 +30,10 @@ router.get("/view-patient-record", viewRegisteredPatient)
 router.get("/view-contract", viewContract);
 
 // (Req 16) accept the employment contract
-router.patch("accept-contract", acceptContract);
+router.patch("/accept-contract", acceptContract);
+
+// (Req 17) As a doctor add my available time slots for appointments
+router.patch("/add-available-time-slot", addAvailableTimeSlot);
 
 // router.post('/reservefollowup',reservefollowup)
 

@@ -56,7 +56,7 @@ const doctorSchema = new mongoose.Schema({
     type: String,
   }, 
   dob: {
-    type : Date ,
+    type : Date , // Date (ISO format); "2023-12-31" 
   },  
   hourlyRate: {
     type: Number,
@@ -102,13 +102,33 @@ const doctorSchema = new mongoose.Schema({
     },
     default: {},
   },
+  workingSlots: [{
+    day: {
+      type: String,
+      enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+      required: false,
+    },
+    slot: {
+      type: String,
+      enum: ["1st", "2nd", "3rd", "4th", "5th"],
+      required: false,
+    },
+  }],
   registered: {
     patients: [],
   },
   appointments: {
     appointment: [{
         date: {
-            type: Date,
+            type: Date, // Date (ISO format); "2023-12-31" 
+        },
+        day: {
+          type: String,
+          enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+        },
+        slot: {
+          type: String,
+          enum: ["1st", "2nd", "3rd", "4th", "5th"],
         },
         status: {
             type: String,
@@ -121,7 +141,7 @@ const doctorSchema = new mongoose.Schema({
         patient: {
             type: String,
         },
-    },],
+    }],
     default: [],
   },
   // speciality: {

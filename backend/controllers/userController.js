@@ -1,12 +1,13 @@
-import passwordValidator from 'password-validator';
 import userModel from "../models/userModel.js";
-import doctorModel from "../models/doctorModel.js";
 import adminModel from "../models/adminModel.js";
-import patientModel from "../models/patientModel.js";
+import doctorModel from "../models/doctorModel.js";
 import pharmacistModel from "../models/pharmacistModel.js";
+import patientModel from "../models/patientModel.js";
 import jwt from "jsonwebtoken"
+import passwordValidator from 'password-validator';
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
+import multerMiddleware from "../Middleware/multer.js";
 
 
 // (Req 1) As a guest register as a patient using username, name, email, password, date of birth, gender, mobile number, emergency contact ( full name , mobile number)
@@ -109,7 +110,7 @@ export const login = async(req,res) => {
     } catch (error) {
         return res.status(400).json({error : error.message});
     }
-}
+};
 
 // (Req 6) logout
 export const logout = async (req, res) => {
@@ -124,7 +125,7 @@ export const logout = async (req, res) => {
     } catch (error) {
       return res.status(400).json({error:error.message});
     }
-  }
+};
 
 // Sending mail with otp
 const sendMail = async(email, otp) => {
@@ -171,13 +172,16 @@ export const forgotPassword = async(req,res) => {
             if(user.role === "Doctor") {
                 userRole = await doctorModel.findOne({ username: username });
             } else {
-                userRole = await patientModel.findOne({ username: username });
+                if(user.role === "Pharmacist") {
+                    userRole = await pharmacistModel.findOne({ username: username });
+                } else {
+                    userRole = await patientModel.findOne({ username: username });
+                }
             }
             if(userRole.email !== email) {
                 return res.status(400).json({ error: 'Email does not match' });
             }
         }
-
         sendMail(email, otp);
 
         const tokenData = {
@@ -194,7 +198,7 @@ export const forgotPassword = async(req,res) => {
     } catch (error) {
         return res.status(400).json({error : error.message});
     }
-}
+};
 
 export const validatePassword = (password) => {
     // Create a schema
@@ -219,7 +223,7 @@ export const validatePassword = (password) => {
     } else {
         return null;
     }
-}
+};
 
 // (Req 12) change my password
 export const resetPassword = async(req,res) => {
@@ -273,4 +277,6 @@ export const resetPassword = async(req,res) => {
     } catch (error) {
         return res.status(400).json({error : error.message});
     }
-}
+};
+
+// export const 
