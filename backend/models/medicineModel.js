@@ -18,17 +18,39 @@ const medicineSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    sales: {
-        type: Number,
-        default: 0,
+    archive: {
+        type: Boolean,
+        default: false,
+    },
+    salesHistory: {
+        sales: [{
+          year: {
+            type: Number,
+          },
+          month: {
+            type: String,
+            // enum: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+            enum: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+          },
+          count: {
+            type: Number,
+            default: 0,
+          },
+          amount: {
+            type: Number,
+            default: 0,
+          },
+        }],
+        default: [],
     },
     description: {
         type: String,
     },
     medicalUse: {
         type: String,
-        enum: ["Pain Management", "Antibiotic", "Anti-Inflammatory", "Fever Reducer", "Allergy Relief", 
-               "Cardiovascular Health", "Digestive Health", "Respiratory Health", "Vitamin/Supplement"],
+    },
+    prescribed: {
+        type: Boolean
     },
     image: {
         type: String,

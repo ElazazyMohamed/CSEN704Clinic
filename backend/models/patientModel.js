@@ -147,7 +147,7 @@ const patientSchema = new mongoose.Schema({
     phoneNumber: String,
     relation: {
       type: String,
-      enum: ["parent", "child", "wife", "husband"],
+      enum: ["parent", "child", "wife", "husband", "sibling"],
     },
   },
   registered: {
@@ -166,9 +166,7 @@ const patientSchema = new mongoose.Schema({
         type: String,
       },
       file: {
-        data: Buffer, 
-        contentType: String,
-        // required: false,
+        type: String, 
       },
       doctorNotes: {
         type: String,
@@ -179,7 +177,7 @@ const patientSchema = new mongoose.Schema({
   appointments: {
     appointment: [{
         date: {
-            type: Date, // Date (ISO format); "2023-12-31" 
+          type: Date, // Date (ISO format); "2023-12-31"  
         },
         day: {
           type: String,
@@ -203,18 +201,63 @@ const patientSchema = new mongoose.Schema({
     }],
     default: [],
   },
+  family:{
+    members: [{
+      name: {
+        type: String,
+      },
+      nationalId: {
+        type: String,
+      },
+      age: {
+        type: String,
+      },
+      gender: {
+        type: String,
+      },
+      relation: {
+        type: String,
+        enum: ["parent", "child", "wife", "husband", "sibling"],
+      },
+    }],
+    default: [],
+  },
   prescription: {
-
-  }
-  // packageType: {
-  //   type: String,
-  //   required: false,
-  // },
-  // packages: {
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Package",
-  //   required: false,
-  // },
+    type: [{
+      doctor: { 
+        type: String
+      },
+      date: { 
+        type: Date, 
+        default: Date.now 
+      },
+      medicines: [{
+        medicine: { 
+          type: String,
+        },
+        dosage: { 
+          type: String 
+        },
+        duration: { 
+          type: String 
+        },
+      }],
+      filled: { 
+        type: Boolean, 
+        default: false 
+      },
+    }],
+    default: [],
+  },
+  packageType: {
+    type: String,
+    required: false,
+  },
+  packages: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Package",
+    required: false,
+  },
   // wallet: {
   //   type : Number,
   //   default : 0,

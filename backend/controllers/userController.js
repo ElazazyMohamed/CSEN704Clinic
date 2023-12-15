@@ -318,3 +318,40 @@ export const filterMedicine = async(req, res) => {
         return res.status(400).json({error : error.message});
     }
 };
+
+// (Req 20) As an Adminstrator / Pharmacist view a total sales report based on a chosen month
+export const viewMonthSales = async(req, res) => {
+    try {
+        const { month, year } = req.body;
+        const medicines = await medicineModel.find({});
+        const salesReport = [];
+        let totalSales = 0;
+        let totalCount = 0;
+
+        for(const medicine of medicines) {
+            const salesForMonth = medicine.salesHistory.sales.find( 
+                (sale) => sale.month === month && sale.year === year
+            );
+
+            if (salesForMonth) {
+                salesReport.push({
+                  name: medicine.name,
+                  sales: salesForMonth.amount,
+                  count: salesForMonth.count,
+                });
+                totalSales = totalSales + sales;
+                totalCount = totalCount + count;
+            }
+        }
+
+        salesReport.push({
+            name: 'Total',
+            sale: totalSales,
+            count: totalCount,
+        });
+        
+        return res.status(200).json({ salesReport });
+    } catch (error) {
+        return res.status(400).json({error : error.message});
+    }
+};

@@ -75,6 +75,7 @@ export const uploadDocuments = async(req, res) => {
 };
 
 // (Req 16) As a pharmacist add a medicine with its details (active ingredients) , price and available quantity
+// (Req 17) As a pharmacist upload medicine image
 export const addMedicine = async(req, res) => {
     // Configure Multer storage
     const storageForMedicines = multer.diskStorage({
@@ -123,6 +124,94 @@ export const addMedicine = async(req, res) => {
             await medicineModel.create({ name, ingredients, price, quantity, description, medicalUse, image });
 
             return res.status(200).json({ message: "Medicine added successfully"});
+        });
+    } catch (error) {
+        return res.status(400).json({ error: error.message});
+    }
+};
+
+// (Req 13) As a Pharmacist view the available quantity, and sales of each medicine
+export const viewQuantitySalesMedicine = async(req, res) => {
+    try {
+        const medicines = await medicineModel.find({})
+        const report = [];
+
+        for (const medicine of medicines) {
+            const totalSales = medicine.salesHistory.sales.reduce((sum, sale) => sum + sale.amount, 0);
+
+            report.push({
+                name: medicine.name,
+                "available Quantity": medicine.quantity,
+                sale: totalSales
+            });
+        }
+
+        return res.status(200).json({report});
+    }
+    catch (error) {
+        return res.status(400).json({ error: error.message});
+    }
+};  
+
+// (Req 18) As a pharmacist edit medicine details and price
+export const editMedicineDetailsPrice = async(req, res) => {
+    try {
+        const token = req.cookies.jwt;
+            jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+                if (err) {
+                    res.status(400).json({message:"You are not logged in."})
+                } else {
+                    const pharmacistusername = decodedToken.username;
+                    const { medicinename, details, price } = req.body;
+                    const medicine = await medicineModel.findOne({ name: medicinename});
+                    medicine.ingredients = details;
+                    medicine.price = price;
+                    await medicine.save();
+
+                    return res.status(200).json({ message: "Medicine details and price is updated successfully" });
+                }
+            });
+    } catch (error) {
+        return res.status(400).json({ error: error.message});
+    }
+};
+
+// (Req 19) as a pharmacist archive a medicine
+export const archiveMedicine = async(req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+            if (err) {
+                res.status(400).json({message:"You are not logged in."})
+            } else {
+                const { medicinename } = req.body;
+                const medicine = await medicineModel.fondOne({ name: medicinename });
+                medicine.archive = true;
+                await medicine.save();
+
+                return res.status(200).json({ message: "Medicine is archived successfully" });
+            }
+        });
+    } catch (error) {
+        return res.status(400).json({ error: error.message});
+    }
+};
+
+// (Req 19) as a pharmacist unarchive a medicine
+export const unArchiveMedicine = async(req, res) => {
+    try {
+        const token = req.cookies.jwt;
+        jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+            if (err) {
+                res.status(400).json({message:"You are not logged in."})
+            } else {
+                const { medicinename } = req.body;
+                const medicine = await medicineModel.fondOne({ name: medicinename });
+                medicine.archive = false;
+                await medicine.save();
+
+                return res.status(200).json({ message: "Medicine is unarchived successfully" });
+            }
         });
     } catch (error) {
         return res.status(400).json({ error: error.message});

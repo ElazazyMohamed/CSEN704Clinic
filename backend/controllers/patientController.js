@@ -9,8 +9,8 @@ import { Console } from "console";
 // import { fileURLToPath } from 'url';
 // import { dirname } from 'path';
 
-// (Req 18) add family members using name, National ID, age, gender and relation to the patient 
-export const setFamilyMember = async (req, res) => {
+// (Req 18) As a patient add family members using name, National ID, age, gender and relation to the patient 
+export const addFamilyMember = async (req, res) => {
   try {
     const token = req.cookies.jwt;
     jwt.verify(token, 'supersecret', async(err, decodedToken) => {
@@ -18,21 +18,20 @@ export const setFamilyMember = async (req, res) => {
         return res.status(400).json({err : err.message});
       } else {
           const patientusername = decodedToken.username;
-          const { name, nationalID, age, gender, relation } = req.body;
+          const { name, nationalId, age, gender, relation } = req.body;
+
           const newFamilyMember = {
             name: name,
-            nationalID: nationalID,
+            nationalId: nationalId,
             age: age,
             gender: gender,
-            email: null,
-            phoneNumber: null,
-            relationToPatient: relation,
-            packageType: null,
+            relation: relation,
           }
-          const patient = await patientModel.findOne({ username: patientusername });
-          patient.familyMembers.push(newFamilyMember);
 
+          const patient = await patientModel.findOne({ username: patientusername });
+          patient.family.members.push(newFamilyMember);
           await patient.save();
+
           return res.status(200).json({message: "FamilyMember Added Successfully"});
       }
     });
@@ -41,7 +40,7 @@ export const setFamilyMember = async (req, res) => {
   }
 };
 
-// (Req 22) view registered family members
+// (Req 22) As a patient view registered family members
 export const getFamilyMembers = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -52,7 +51,7 @@ export const getFamilyMembers = async (req, res) => {
         const patientusername = decodedToken.username;
         const patient = await patientModel.findOne({username: patientusername});
         
-        const familyMembers = patient.familyMembers;
+        const familyMembers = patient.family.members;
 
         return res.status(200).json({ familyMembers });
       }
@@ -70,11 +69,9 @@ export const getDoctorsNameSpecialitySessionPrice = async (req, res) => {
       if(err) {
         return res.status(400).json({err : err.message});
       } else {
-        const patientusername = decodedToken.username;
-        const patient = await patientModel.findOne({username: patientusername});
 
         const doctors = await doctorModel.find().select(
-          "name speciality hourlyRate"
+          "name requiredDocuments.speciality hourlyRate"
         );
 
         const resultDoctors = doctors.map((doctor) => {
@@ -98,18 +95,33 @@ export const getDoctorsNameSpecialitySessionPrice = async (req, res) => {
   }
 };
 
-// (Req 38) search for a doctor by name and/or speciality
+// (Req 38) As a patient search for a doctor by name and/or speciality
 export const getDoctorNameSpeciality = async (req, res) => {
   try {
     const { doctorName, speciality } = req.body;
-    const doctor = await doctorModel.findOne({
-      $or: [
-        { name: doctorName },
-        { speciality: speciality }
-      ]
-    });
+
+    if(!doctorName && !speciality) {
+      return res.status(400).json({ message: "you need to enter a doctor name and/or speciality to search" });
+    }
+
+    let doctor;
+    if(doctorName && speciality) {
+      doctor = await doctorModel.findOne({
+        $or: [
+          { name: doctorName },
+          { speciality: speciality }
+        ]
+      });
+    } else {
+      if(doctorName) {
+        doctor = await doctorModel.findOne({ name: doctorName });
+      } else {
+        doctor = await doctorModel.findOne({ "requiredDocuments.speciality": speciality });
+      }
+    }
+
     if (doctor) {
-      return res.status(200).json(doctor);
+      return res.status(200).json({ doctor });
     } else {
       return res.status(404).json({ message: "No doctors found with the given criteria." });
     }
@@ -118,27 +130,73 @@ export const getDoctorNameSpeciality = async (req, res) => {
   }
 };
 
-// (Req 39) filter a doctor by speciality and/or availability on a certain date and at a specific time
+// (Req 39) As a patient filter a doctor by speciality and/or availability on a certain date and at a specific time
 export const filterDoctorsSpecialityAvailability = async (req, res) => {
   try {
-    const { speciality, date, time } = req.body;
-    const doctors = await doctorModel.find({
-      $or: [
-        { speciality: speciality },
-        { availability: { $elemMatch: { date: new Date(date), time: time } } }
-      ]
-    });
-    if (doctors) {
+    const { speciality, date, slot } = req.body;
+    
+    if(!speciality && !date && !slot) {
+      return res.status(400).json({ message: "you need to enter a speciality and/or date and slot to filter doctors" });
+    }
+    let doctors;
+    if(speciality && date && slot) {
+
+    } else {
+      if(speciality) {
+        doctors = await doctorModel.find({ "requiredDocuments.speciality": speciality });
+      } else {
+        let newDate = new Date(Date);
+        doctors = await doctorModel.find({ "workingSlots.day": newDate.getDay, "workingSlots.slot": slot });
+        let time;
+        switch (slot) {
+          case "1st":
+            time = "T09:00:00Z";
+            break;
+          case "2nd":
+            time = "T10:45:00Z";
+            break;
+          case "3rd":
+            time = "T12:30:00Z";
+            break;
+          case "4th":
+            time = "T14:30:00Z";
+            break;
+          case "5th":
+            time = "T16:30:00Z";
+            break;
+          default:
+            throw new Error("Invalid slot value: " + slot);
+        }
+        newDate = newDate.toISOString().substring(0, 10);
+        newDate = newDate + time;
+        
+        doctors = doctors.filter(doctor => {
+          const appointments = doctor.appointments.appointment;
+          const hasConflictingAppointment = appointments.some(appointment => {
+            const appointmentDate = new Date(appointment.date);
+            const appointmentSlot = appointment.slot;
+
+            return (
+              appointmentDate.getTime() === newDate.getTime() &&
+              appointmentSlot === slot
+            );
+          });
+          return !hasConflictingAppointment;
+        });
+      }
+    }
+
+    if (doctors && doctors.length > 0) {
       return res.status(200).json(doctors);
     } else {
-      res.status(404).json({ message: "No doctors found with the given criteria." });
+      res.status(404).json({ message: "No available doctors found with the given criteria." });
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-// (Req 40) select a doctor from the search/filter results, 
+// (Req 40) As a patient select a doctor from the search/filter results, 
 export const selectDoctor = async (req, res) => {
   try {
     const { username } = req.params;
@@ -154,7 +212,7 @@ export const selectDoctor = async (req, res) => {
   }
 };
 
-// (Req 41) view all details of selected doctor including specilaty, affiliation (hospital), educational background
+// (Req 41) As a patient view all details of selected doctor including specilaty, affiliation (hospital), educational background
 export const viewSelectedDoctor = async (req, res, username) => {
   try {
     const selectedDoctor = await doctorModel.findOne({ username: username }).select("name speciality affiliation educationBg availableTimeSlots");
@@ -165,29 +223,29 @@ export const viewSelectedDoctor = async (req, res, username) => {
   }
 }
 
-export const addPrescription = async (req, res) => {
-  try {
-    const token = req.cookies.jwt;
-    jwt.verify(token, 'supersecret', async(err, decodedToken) => {
-      if(err) {
-        return res.status(400).json({err : err.message});
-      } else {
-        const patientusername = decodedToken.username;
-        const { name, price, description, img, doctor, date } = req.body;
+// export const addPrescription = async (req, res) => {
+//   try {
+//     const token = req.cookies.jwt;
+//     jwt.verify(token, 'supersecret', async(err, decodedToken) => {
+//       if(err) {
+//         return res.status(400).json({err : err.message});
+//       } else {
+//         const patientusername = decodedToken.username;
+//         const { name, price, description, img, doctor, date } = req.body;
 
-        const newPrescription = { name, price, description, img, doctor, date };
+//         const newPrescription = { name, price, description, img, doctor, date };
         
-        const patient = await patientModel.findOne({username: patientusername});
-        patient.prescription.push(newPrescription);
-        await patient.save();
+//         const patient = await patientModel.findOne({username: patientusername});
+//         patient.prescription.push(newPrescription);
+//         await patient.save();
 
-        return res.status(200).json(newPrescription);
-      }
-    });
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-};
+//         return res.status(200).json(newPrescription);
+//       }
+//     });
+//   } catch (error) {
+//     return res.status(400).json({ error: error.message });
+//   }
+// };
 
 // (Req 54) view a list of all my perscriptions
 export const getPrescriptions = async (req, res) => {

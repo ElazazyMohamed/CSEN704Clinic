@@ -1,6 +1,6 @@
 import express from "express";
 import { patientRegister, doctorRegister, pharmacistRegister, login, logout, forgotPassword, resetPassword,
-         viewMedicines, searchMedicine, filterMedicine } from "../controllers/userController.js";
+         viewMedicines, searchMedicine, filterMedicine, viewMonthSales } from "../controllers/userController.js";
 
 //router initialization
 const router = express.Router();
@@ -34,5 +34,8 @@ router.get('/search-medicine', searchMedicine);
 
 // (Req 15) As a user (Patient/Pharmacist/Administrator) filter medicines based on medicinal use
 router.get('/filter-medicines', filterMedicine);
+
+// (Req 20) As an Adminstrator / Pharmacist view a total sales report based on a chosen month
+router.get("/month-sales", viewMonthSales);
 
 export default router;

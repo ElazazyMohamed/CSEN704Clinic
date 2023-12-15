@@ -1,7 +1,7 @@
 import express, { json } from "express";
-import { setFamilyMember, getFamilyMembers, 
+import { addFamilyMember, getFamilyMembers, 
          getDoctorsNameSpecialitySessionPrice, getDoctorNameSpeciality, filterDoctorsSpecialityAvailability, 
-         selectDoctor, getPrescriptions, addPrescription, filterPrescription, selectPrescription,
+         selectDoctor, viewSelectedDoctor, getPrescriptions, addPrescription, filterPrescription, selectPrescription,
          uploadHealthRecord, removeHealthRecord, viewHealthRecords, getAppointments, 
          filterAppointmentsDateStatus, getWallet, linkFamily, payAppointment, payAppointment2, payPackage
          , payPackage2 } from "../controllers/patientController.js";
@@ -10,29 +10,29 @@ import upload from "../Middleware/multer.js";
 //router initialization
 const router = express.Router();
 
-//add family members
-router.patch("/setFamilyMember", setFamilyMember);
+// (Req 18) As a patient add family members using name, National ID, age, gender and relation to the patient 
+router.patch("/add-family-fember", addFamilyMember);
 
-//get family members
-router.get("/getFamilyMembers", getFamilyMembers);
+// (Req 22) As a patient view registered family members
+router.get("/get-family-members", getFamilyMembers);
 
-// View doctors names, speciality and sessionPrice
-router.get("/getDoctorsNameSpecialitySessionPrice", getDoctorsNameSpecialitySessionPrice);
+// (Req 37) As a patient view a list of all doctors along with their speciality, session price (based on subscribed health package if any)
+router.get("/get-doctors-name-speciality-sessionPrice", getDoctorsNameSpecialitySessionPrice);
 
-// search doctor name and or or speciality 
-router.get("/getDoctorNameSpeciality", getDoctorNameSpeciality);
+// (Req 38) As a patient search for a doctor by name and/or speciality
+router.get("/get-doctor-name-and-or-speciality", getDoctorNameSpeciality);
 
 // filter doctors speciality and or or availability on certain date and at specific time
-router.get("/filterDoctorsSpecialityAvailability", filterDoctorsSpecialityAvailability);
+router.get("/filter-doctors-speciality-availability", filterDoctorsSpecialityAvailability);
 
-// select a doctor from the search or the filter
-router.get("/selectDoctor/:username", selectDoctor);
+// (Req 40) As a patient select a doctor from the search/filter results, 
+router.get("/select-doctor/:username", selectDoctor);
 
-// Add prescription to a patient
-router.post("/addPrescription", addPrescription);
+// (Req 41) As a patient view all details of selected doctor including specilaty, affiliation (hospital), educational background
+router.post("/view-selected-doctor", viewSelectedDoctor); // view is called inside select 
 
 // get prescriptions of a patient
-router.get("/getprescriptions", getPrescriptions);
+router.get("/get-prescriptions", getPrescriptions);
 
 // filter prescriptions
 router.get("/filterPrescription", filterPrescription)
