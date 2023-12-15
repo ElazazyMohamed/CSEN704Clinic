@@ -168,7 +168,7 @@ const patientSchema = new mongoose.Schema({
       file: {
         data: Buffer, 
         contentType: String,
-        required: false,
+        // required: false,
       },
       doctorNotes: {
         type: String,

@@ -1,26 +1,82 @@
 import doctorModel from "../models/doctorModel.js";
 import patientModel from "../models/patientModel.js";
 import jwt from 'jsonwebtoken';
+import multer from "multer";
 
 // (Req 4) As a doctor upload and submit required documents upon registrationas a doctor such as ID, Medical licenses and medical degree 
 export const uploadDocuments = async (req, res) => {
+  // Configure Multer storage
+  const storageForDoctors = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "uploads/doctors");
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + '-' + file.originalname);
+    },
+  });
+
+  // configure file filtering 
+  const fileFilterForDoctors = (req, file, cb) => {
+    if (file.mimetype === "image/jpeg" || 
+        file.mimetype === "image/jpg" || 
+        file.mimetype === "image/png" || 
+        file.mimetype === "application/pdf") {
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+  };
+
+  // Create Multer upload middleware
+  const myUpload = multer({ storage: storageForDoctors, limits: 
+    {
+        fileSize: 1024 * 1024 * 5,
+    },
+    fileFilter: fileFilterForDoctors }).fields([
+      { name: 'medicalId', maxCount: 1 },
+      { name: 'medicalLicense', maxCount: 1 },
+      { name: 'medicalDegree', maxCount: 1 }
+    ]);
+
   try {
-      const { medicalId, medicalLicense, medicalDegree, speciality, requestId } = req.body;
-      const registeredDoctor = await doctorModel.findOne({ _id: requestId});
-
-      if(!registeredDoctor) {
-          return res.status(400).json({ message: "Wrong request ID"});
+    myUpload(req, res, async (err) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error uploading image' });
       }
-
-      registeredDoctor.requiredDocuments = {
-          medicalId: medicalId,
-          medicalLicense: medicalLicense,
-          medicalDegree: medicalDegree,
-          speciality: speciality
-      };
-      await registeredDoctor.save();
-
-      return res.status(200).json({message: "Documents uploaded successfully, waiting documents review and employment contract"});
+      const token = req.cookies.jwt;
+      jwt.verify(token, 'supersecret', async (err, decodedToken) => {
+        if (err) {
+          res.status(400).json({message:"You are not logged in."})
+        } else {
+        const doctorusername = decodedToken.username;
+        if (!req.files || !req.files.medicalId || !req.files.medicalLicense || !req.files.medicalDegree) {
+          return res.status(400).json({ error: 'All files are required (medicalId, medicalLicense, medicalDegree)' });
+        }
+  
+        const { speciality } = req.body;
+        const registeredDoctor = await doctorModel.findOne({ username: doctorusername });
+        if(!registeredDoctor) {
+          return res.status(400).json({ message: "Wrong request ID"});
+        }
+  
+        const medicalId = req.files.medicalId[0].path;
+        const medicalLicense = req.files.medicalLicense[0].path;
+        const medicalDegree = req.files.medicalDegree[0].path;
+  
+        registeredDoctor.requiredDocuments = {
+            medicalId: medicalId,
+            medicalLicense: medicalLicense,
+            medicalDegree: medicalDegree,
+            speciality: speciality
+        };
+        await registeredDoctor.save();
+  
+        return res.status(200).json({message: "Documents uploaded successfully, waiting documents review and employment contract"});
+        }
+      });
+      
+    });
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }

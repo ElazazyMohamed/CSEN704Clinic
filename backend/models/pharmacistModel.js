@@ -29,16 +29,13 @@ const pharmacistSchema = new mongoose.Schema({
     },
     requiredDocuments: {
         pharmacyId: {
-          data: Buffer,
-          contentType: String,
+            type: String,
         },
         pharmacyLicense: {
-          data: Buffer,
-          contentType: String,
+            type: String,
         },
         pharmacyDegree: {
-          data: Buffer,
-          contentType: String,
+            type: String,
         },
         default: {},
       },

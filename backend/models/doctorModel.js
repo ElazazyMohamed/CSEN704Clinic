@@ -74,16 +74,13 @@ const doctorSchema = new mongoose.Schema({
   },
   requiredDocuments: {
     medicalId: {
-      data: Buffer,
-      contentType: String,
+      type: String,
     },
     medicalLicense: {
-      data: Buffer,
-      contentType: String,
+      type: String,
     },
     medicalDegree: {
-      data: Buffer,
-      contentType: String,
+      type: String,
     },
     speciality: {
       type: String,

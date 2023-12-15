@@ -14,6 +14,10 @@ const medicineSchema = new mongoose.Schema({
     quantity: {
         type: Number,
     },
+    available: {
+        type: Boolean,
+        default: false,
+    },
     sales: {
         type: Number,
         default: 0,
@@ -23,8 +27,8 @@ const medicineSchema = new mongoose.Schema({
     },
     medicalUse: {
         type: String,
-        // i assumed here that the medical use can be described in 2 words maximum
-        trim: true,
+        enum: ["Pain Management", "Antibiotic", "Anti-Inflammatory", "Fever Reducer", "Allergy Relief", 
+               "Cardiovascular Health", "Digestive Health", "Respiratory Health", "Vitamin/Supplement"],
     },
     image: {
         type: String,

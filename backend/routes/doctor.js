@@ -1,6 +1,6 @@
 import express from "express";
 import { uploadDocuments, updateDoctor, searchPatient, getRegisteredPatients, filterPatientsUpcomingAppointments, 
-    selectPatient, viewRegisteredPatient, acceptContract, viewContract, addAvailableTimeSlot } from "../controllers/doctorController.js";
+    selectPatient, viewRegisteredPatient, acceptContract, viewContract, addAvailableTimeSlots } from "../controllers/doctorController.js";
 
 //router initialization
 const router = express.Router();
@@ -33,7 +33,7 @@ router.get("/view-contract", viewContract);
 router.patch("/accept-contract", acceptContract);
 
 // (Req 17) As a doctor add my available time slots for appointments
-router.patch("/add-available-time-slot", addAvailableTimeSlot);
+router.patch("/add-available-time-slot", addAvailableTimeSlots);
 
 // router.post('/reservefollowup',reservefollowup)
 

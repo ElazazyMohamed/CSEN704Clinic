@@ -3,12 +3,11 @@ import adminModel from "../models/adminModel.js";
 import doctorModel from "../models/doctorModel.js";
 import pharmacistModel from "../models/pharmacistModel.js";
 import patientModel from "../models/patientModel.js";
+import medicineModel from "../models/medicineModel.js";
 import jwt from "jsonwebtoken"
 import passwordValidator from 'password-validator';
 import crypto from 'crypto';
 import nodemailer from "nodemailer";
-import multerMiddleware from "../Middleware/multer.js";
-
 
 // (Req 1) As a guest register as a patient using username, name, email, password, date of birth, gender, mobile number, emergency contact ( full name , mobile number)
 export const patientRegister = async (req, res) => {
@@ -87,7 +86,7 @@ const clearToken = (res) => {
 export const login = async(req,res) => {
     try {
         const { username, password } = req.body;        
-        const user = await userModel.findOne({username:username});
+        const user = await userModel.findOne({ username: username });
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -279,4 +278,43 @@ export const resetPassword = async(req,res) => {
     }
 };
 
-// export const 
+// (Req 12) As a user (Patient/Pharmacist/Administrator) view a list of all available medicines (including picture of medicine, price, description)
+export const viewMedicines = async(req, res) => {
+    try {
+        const medicines = await medicineModel.find({available: true});
+        if(!medicines) {
+            return res.status(400).json({ message: "there is no any available medicine" });
+        }
+        return res.status(200).json(medicines);
+
+    } catch (error) {
+        return res.status(400).json({error : error.message});
+    }
+};
+
+// (Req 14) As a user (Patient/Pharmacist/Administrator) search for medicine based on name
+export const searchMedicine = async(req, res) => {
+    try {
+        const { name } = req.body;
+        const medicines = await medicineModel.findOne({ name: name });
+        return res.status(200).json(medicines);
+    } catch (error) {
+        return res.status(400).json({error : error.message});
+    }
+};
+
+// (Req 15) As a user (Patient/Pharmacist/Administrator) filter medicines based on medicinal use
+export const filterMedicine = async(req, res) => {
+    try {
+        const { filter } = req.body;
+        if(!filter) {
+            return res.status(200).json({message : "Filter parameter is required"});
+        }
+
+        const filteredMedicines = await medicineModel.find({ medicalUse: filter });
+
+        return res.status(200).json(filteredMedicines);
+    } catch (error) {
+        return res.status(400).json({error : error.message});
+    }
+};

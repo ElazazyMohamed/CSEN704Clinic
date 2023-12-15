@@ -1,5 +1,6 @@
 import express from "express";
-import { patientRegister, doctorRegister, pharmacistRegister, login, logout, forgotPassword, resetPassword } from "../controllers/userController.js";
+import { patientRegister, doctorRegister, pharmacistRegister, login, logout, forgotPassword, resetPassword,
+         viewMedicines, searchMedicine, filterMedicine } from "../controllers/userController.js";
 
 //router initialization
 const router = express.Router();
@@ -25,4 +26,13 @@ router.post('/reset-password', resetPassword);
 // (Req 13) As a user reset a forgotten password through OTP sent to email
 router.post('/forgot-password', forgotPassword);
 
-export default router
+// (Req 12) As a user (Patient/Pharmacist/Administrator) view a list of all available medicines (including picture of medicine, price, description)
+router.get('/available-medicines', viewMedicines);
+
+// (Req 14) As a user (Patient/Pharmacist/Administrator) search for medicine based on name
+router.get('/search-medicine', searchMedicine);
+
+// (Req 15) As a user (Patient/Pharmacist/Administrator) filter medicines based on medicinal use
+router.get('/filter-medicines', filterMedicine);
+
+export default router;
