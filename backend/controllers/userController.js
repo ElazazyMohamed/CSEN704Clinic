@@ -98,6 +98,7 @@ export const login = async(req,res) => {
         const tokenData = {
             username: user.username,
             role: user.role,
+            user: user
         };
         const token = createToken(tokenData);
         const maxAge = 3 * 24 * 60 * 60;
