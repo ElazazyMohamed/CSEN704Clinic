@@ -9,6 +9,7 @@ import Typography from "@mui/material/Typography";
 import PatientSearchBar from "../../components/doctor/search/PatientSearchBar";
 import PatientTable from "../../components/doctor/table/PatientTable";
 
+
 export default function Doctor() {
   const data = [
     {
@@ -38,8 +39,10 @@ export default function Doctor() {
     },
   ];
   const [data2, setData2] = useState(data);
-  const user = useSelector((state) => state.user);
 
+  
+  const user = useSelector((state) => state.user);
+  
   function search(inputs) {
     setData2(
       data.filter((item) =>

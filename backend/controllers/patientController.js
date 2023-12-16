@@ -223,29 +223,29 @@ export const viewSelectedDoctor = async (req, res, username) => {
   }
 }
 
-// export const addPrescription = async (req, res) => {
-//   try {
-//     const token = req.cookies.jwt;
-//     jwt.verify(token, 'supersecret', async(err, decodedToken) => {
-//       if(err) {
-//         return res.status(400).json({err : err.message});
-//       } else {
-//         const patientusername = decodedToken.username;
-//         const { name, price, description, img, doctor, date } = req.body;
+export const addPrescription = async (req, res) => {
+  try {
+    const token = req.cookies.jwt;
+    jwt.verify(token, 'supersecret', async(err, decodedToken) => {
+      if(err) {
+        return res.status(400).json({err : err.message});
+      } else {
+        const patientusername = decodedToken.username;
+        const { name, price, description, img, doctor, date } = req.body;
 
-//         const newPrescription = { name, price, description, img, doctor, date };
+        const newPrescription = { name, price, description, img, doctor, date };
         
-//         const patient = await patientModel.findOne({username: patientusername});
-//         patient.prescription.push(newPrescription);
-//         await patient.save();
+        const patient = await patientModel.findOne({username: patientusername});
+        patient.prescription.push(newPrescription);
+        await patient.save();
 
-//         return res.status(200).json(newPrescription);
-//       }
-//     });
-//   } catch (error) {
-//     return res.status(400).json({ error: error.message });
-//   }
-// };
+        return res.status(200).json(newPrescription);
+      }
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+};
 
 // (Req 54) view a list of all my perscriptions
 export const getPrescriptions = async (req, res) => {
