@@ -1,11 +1,10 @@
 import express, { json } from "express";
 import { addFamilyMember, getFamilyMembers, 
          getDoctorsNameSpecialitySessionPrice, getDoctorNameSpeciality, filterDoctorsSpecialityAvailability, 
-         selectDoctor, viewSelectedDoctor, getPrescriptions, addPrescription, filterPrescription, selectPrescription,
-         uploadHealthRecord, removeHealthRecord, viewHealthRecords, getAppointments, 
-         filterAppointmentsDateStatus, getWallet, linkFamily, payAppointment, payAppointment2, payPackage
-         , payPackage2 } from "../controllers/patientController.js";
-import upload from "../Middleware/multer.js";
+         selectDoctor, viewSelectedDoctor, getPrescriptions, filterPrescription, selectPrescription, 
+         uploadHealthRecord, viewHealthRecords, getHealthRecord, removeHealthRecord, getAppointments, 
+         filterAppointmentsDateStatus, getWallet, linkFamily, payAppointment, payAppointment2, payPackage, 
+         payPackage2 } from "../controllers/patientController.js";
 
 //router initialization
 const router = express.Router();
@@ -31,20 +30,23 @@ router.get("/select-doctor/:username", selectDoctor);
 // (Req 41) As a patient view all details of selected doctor including specilaty, affiliation (hospital), educational background
 router.post("/view-selected-doctor", viewSelectedDoctor); // view is called inside select 
 
-// get prescriptions of a patient
+// (Req 54) As a patient view a list of all my perscriptions
 router.get("/get-prescriptions", getPrescriptions);
 
-// filter prescriptions
-router.get("/filterPrescription", filterPrescription)
+// (Req 55) As a patient filter prescriptions based on date or doctor or filled or unfilled
+router.get("/filter-prescription", filterPrescription)
 
-// select a prescription from filter prescriptions
-router.get("/selectPrescription/:prescriptionId", selectPrescription);
+// (Req 56) As a patient select a prescription from my list of perscriptions
+router.get("/select-prescription/:prescriptionId", selectPrescription);
 
-router.post("/uploadHealthRecord", uploadHealthRecord);
+// (Req 2) As a patient upload documents (PDF,JPEG,JPG,PNG) for my medical history
+router.post("/upload-health-record", uploadHealthRecord);
 
-router.delete("/removeHealthRecord/:recordId", removeHealthRecord);
+// helper to remove
+router.get("/get-health-records", viewHealthRecords);
 
-router.get("/viewHealthRecords", viewHealthRecords);
+// (Req 2) As a patient remove documents (PDF,JPEG,JPG,PNG) for my medical history
+router.delete("/remove-health-record/:recordId", removeHealthRecord);
 
 router.get("/getAppointments", getAppointments);
 

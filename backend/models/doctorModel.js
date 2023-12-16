@@ -9,10 +9,7 @@ const doctorSchema = new mongoose.Schema({
   }, 
   email: {
     type: String,
-  }, 
-  password: {
-    type: String,
-  }, 
+  },  
   dob: {
     type : Date , // Date (ISO format); "2023-12-31" 
   },  

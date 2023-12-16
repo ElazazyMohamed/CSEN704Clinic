@@ -2,10 +2,11 @@ import userModel from "../models/userModel.js";
 import patientModel from "../models/patientModel.js";
 import doctorModel from "../models/doctorModel.js";
 import jwt from "jsonwebtoken"
+import multer from "multer";
 import fs from 'fs/promises';
 import path from 'path';
 import { Console } from "console";
-// import stripe from "stripe";
+import stripe from "stripe";
 // import { fileURLToPath } from 'url';
 // import { dirname } from 'path';
 
@@ -140,13 +141,37 @@ export const filterDoctorsSpecialityAvailability = async (req, res) => {
     }
     let doctors;
     if(speciality && date && slot) {
-
+      doctors = await doctorModel.find(
+        {
+          "requiredDocuments.speciality": speciality,
+          $and: [
+            {
+              workingSlots: {
+                $elemMatch: {
+                  day: newDate.getDay,
+                  slot: slot,
+                }
+              }
+            },
+            {
+              $nor: [{
+                "appointments.appointment": {
+                  $elemMatch: {
+                    date: newDate,
+                    slot: slot,
+                    status: "upcoming",
+                  }
+                }
+              }]
+            }
+          ]
+        }
+      );
     } else {
       if(speciality) {
         doctors = await doctorModel.find({ "requiredDocuments.speciality": speciality });
       } else {
         let newDate = new Date(Date);
-        doctors = await doctorModel.find({ "workingSlots.day": newDate.getDay, "workingSlots.slot": slot });
         let time;
         switch (slot) {
           case "1st":
@@ -170,24 +195,35 @@ export const filterDoctorsSpecialityAvailability = async (req, res) => {
         newDate = newDate.toISOString().substring(0, 10);
         newDate = newDate + time;
         
-        doctors = doctors.filter(doctor => {
-          const appointments = doctor.appointments.appointment;
-          const hasConflictingAppointment = appointments.some(appointment => {
-            const appointmentDate = new Date(appointment.date);
-            const appointmentSlot = appointment.slot;
-
-            return (
-              appointmentDate.getTime() === newDate.getTime() &&
-              appointmentSlot === slot
-            );
-          });
-          return !hasConflictingAppointment;
-        });
+        doctors = await doctorModel.find(
+          { 
+            $and: [
+              {
+                workingSlots: {
+                  $elemMatch: {
+                    day: newDate.getDay,
+                    slot: slot,
+                  }
+                }
+              },
+              {
+                $nor: [{
+                  "appointments.appointment": {
+                    $elemMatch: {
+                      date: newDate,
+                      slot: slot,
+                      status: "upcoming",
+                    }
+                  }
+                }]
+              }
+            ]
+          }
+        );
       }
     }
-
     if (doctors && doctors.length > 0) {
-      return res.status(200).json(doctors);
+      return res.status(200).json({ doctors });
     } else {
       res.status(404).json({ message: "No available doctors found with the given criteria." });
     }
@@ -223,31 +259,7 @@ export const viewSelectedDoctor = async (req, res, username) => {
   }
 }
 
-// export const addPrescription = async (req, res) => {
-//   try {
-//     const token = req.cookies.jwt;
-//     jwt.verify(token, 'supersecret', async(err, decodedToken) => {
-//       if(err) {
-//         return res.status(400).json({err : err.message});
-//       } else {
-//         const patientusername = decodedToken.username;
-//         const { name, price, description, img, doctor, date } = req.body;
-
-//         const newPrescription = { name, price, description, img, doctor, date };
-        
-//         const patient = await patientModel.findOne({username: patientusername});
-//         patient.prescription.push(newPrescription);
-//         await patient.save();
-
-//         return res.status(200).json(newPrescription);
-//       }
-//     });
-//   } catch (error) {
-//     return res.status(400).json({ error: error.message });
-//   }
-// };
-
-// (Req 54) view a list of all my perscriptions
+// (Req 54) As a patient view a list of all my perscriptions
 export const getPrescriptions = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -256,9 +268,11 @@ export const getPrescriptions = async (req, res) => {
         return res.status(400).json({err : err.message});
       } else {
         const patientusername = decodedToken.username;
-        const patient = await patientModel.findOne({ username: patientusername });
-
-        return res.status(200).json(patient.prescription);
+        const patients = await patientModel.findOne({ username: patientusername });
+        if(!patients || patients.length <= 0) {
+          return res.status(400).json({message: "You have no prescriptions"})
+        }
+        return res.status(200).json({ "prescriptions": patients.prescriptions });
       }
     }); 
   } catch (error) {
@@ -266,7 +280,7 @@ export const getPrescriptions = async (req, res) => {
   }
 };
 
-// (Req 55) filter prescriptions based on date or doctor or filled or unfilled
+// (Req 55) As a patient filter prescriptions based on date or doctor or filled or unfilled
 export const filterPrescription = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -276,38 +290,30 @@ export const filterPrescription = async (req, res) => {
       } else {
         const patientusername = decodedToken.username;
         const { date, doctor, filled } = req.body;
-
-        const patient = await patientModel.findOne({
-          username: patientusername,
-        });
-
-        let resultPrescriptions = patient.prescription.map((prescription) => ({
-          id: prescription._id.toString(),
-          name: prescription.name,
-          price: prescription.price,
-          description: prescription.description,
-          doctor: prescription.doctor.name,
-          date: prescription.date,
-          filled: prescription.filled,
-        }));
-
-        if (date) {
-          resultPrescriptions = resultPrescriptions.filter(
-            (prescription) => prescription.date === date
-          );
+        if(!date && !doctor && !filled) {
+          return res.status(400).json({message: "You must add a filter on date or doctor or filled"});
         }
-        if (doctor) {
-          resultPrescriptions = resultPrescriptions.filter(
-            (prescription) => prescription.doctor.name === doctor
-          );
-        }
-        if (filled !== undefined) {
-          resultPrescriptions = resultPrescriptions.filter(
-            (prescription) => prescription.filled === filled
-          );
-        }
+        let patient;
+        let newDate = new Date(Date);
+        let time = "T00:00:00Z";
+        newDate = newDate.toISOString().substring(0, 10);
+        newDate = newDate + time;
 
-        return res.status(200).json(resultPrescriptions);
+        patient = await patientModel.find(
+          {
+            $and: [
+              { "username": patientUsername },
+              {
+                $or: [
+                  { "prescriptions.prescription.date": date },
+                  { "prescriptions.prescription.doctor": doctor },
+                  { "prescriptions.prescription.filled": filled },
+                ]
+              }
+            ]
+          }
+        );
+        return res.status(200).json({ prescriptions: patient.prescriptions});
       }
     });
   } catch (error) {
@@ -315,7 +321,7 @@ export const filterPrescription = async (req, res) => {
   }
 };
 
-// (Req 56) select a prescription from my list of perscriptions
+// (Req 56) As a patient select a prescription from my list of perscriptions
 export const selectPrescription = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -346,6 +352,71 @@ export const selectPrescription = async (req, res) => {
 
 // (Req 2) patient upload documents (PDF,JPEG,JPG,PNG) for my medical history
 export const uploadHealthRecord = async (req, res) => {
+    // Configure Multer storage
+    const storageForPatients = multer.diskStorage({
+      destination: (req, file, cb) => {
+        cb(null, "uploads/patient");
+      },
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+      },
+    });
+  
+    // configure file filtering 
+    const fileFilterForPatients = (req, file, cb) => {
+      if (file.mimetype === "image/jpeg" || 
+          file.mimetype === "image/jpg" || 
+          file.mimetype === "image/png" || 
+          file.mimetype === "application/pdf") {
+          cb(null, true);
+      } else {
+          cb(null, false);
+      }
+    };
+  
+    // Create Multer upload middleware
+    const myUpload = multer({ storage: storageForPatients, limits: 
+      {
+          fileSize: 1024 * 1024 * 5,
+      },
+      fileFilter: fileFilterForPatients }).fields([
+        { name: 'medicalHistory', maxCount: 1 }
+      ]);
+  
+  try {
+    myUpload(req, res, async (err) => {
+      const token = req.cookies.jwt;
+      jwt.verify(token, "supersecret", async (err, decodedToken) => {
+        if (err) {
+          return res.status(400).json({ message: "You are not logged in." });
+        } else {
+          const pharmacistusername = decodedToken.username;
+
+          if (!req.files || !req.files.medicalHistory) {
+              return res.status(400).json({ error: 'Medical history file is required)' });
+          }
+
+          const patientusername = decodedToken.username;
+          const { date, description, doctorNotes } = req.body;
+          const uploadedBy = patientusername;
+          const file = req.files.medicalHistory[0].path;
+          const newHealthRecord = { date, uploadedBy, description, file, doctorNotes };
+
+          const patient = await patientModel.findOne({ username: patientusername});
+          patient.health.records.push(newHealthRecord);
+          await patient.save();
+          return res.status(200).json({ message: "Health record added successfully" });
+       }
+      });
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+};
+
+// (Req 24) helper to delete health records
+export const viewHealthRecords = async(req, res) => {
   try {
     const token = req.cookies.jwt;
     jwt.verify(token, "supersecret", async (err, decodedToken) => {
@@ -353,22 +424,21 @@ export const uploadHealthRecord = async (req, res) => {
         return res.status(400).json({ message: "You are not logged in." });
       } else {
         const patientusername = decodedToken.username;
-        const { date, description, file, doctorNotes } = req.body;
-        const uploadedBy = patientusername;
-        const newHealthRecord = { date, uploadedBy, description, file, doctorNotes };
 
         const patient = await patientModel.findOne({ username: patientusername});
-        patient.healthrecords.push(newHealthRecord);
-        await patient.save();
-        return res.status(200).json({ message: "Health record added successfully" });
+
+        if(!patient) {
+          return res.status(404).json({ "message": "no health records available." });
+        }
+        return res.status(200).json({ "Health Records": patient.health.records });
       }
     });
   } catch (error) {
-    return res.status(400).json({ error: error.message });
+    return res.status(400).json({ "error": "Failed to remove health record." });
   }
 };
 
-// (Req 2) patient remove documents (PDF,JPEG,JPG,PNG) for my medical history
+// (Req 2) As a patient remove documents (PDF,JPEG,JPG,PNG) for my medical history
 export const removeHealthRecord = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -377,44 +447,22 @@ export const removeHealthRecord = async (req, res) => {
         return res.status(400).json({ message: "You are not logged in." });
       } else {
         const patientusername = decodedToken.username;
-        const { recordId } = req.params;
+        const { recordIndex } = req.params;
 
         const patient = await patientModel.findOne({ username: patientusername});
-        const healthRecords = patient.healthrecords;
-
-        const recordIndex = healthRecords.findIndex(record => record._id.toString() === recordId);
-        if(recordIndex !== -1) {
-          healthRecords.splice(recordIndex, 1);
-          patient.healthrecords = healthRecords;
-          await patient.save();
-
-          res.status(200).json({ "message": "Health record removed successfully." });
-        } else {
-          return res.status(404).json({ "message": "Health record not found." });
+        
+        if (recordIndex < 0 || recordIndex >= patient.health.records.length) {
+          return res.status(400).json({ message: 'Invalid record index.' });
         }
+
+        patient.health.records.splice(recordIndex, 1);
+        await patient.save();
+
+        return res.status(200).json({ message: 'Health record deleted successfully.' });
       }
     });
   } catch (error) {
     return res.status(400).json({ "error": "Failed to remove health record." });
-  }
-};
-
-// (Req 24) view uploaded health records
-export const viewHealthRecords = async (req, res) => {
-  try {
-    const token = req.cookies.jwt;
-    jwt.verify(token, "supersecret", async (err, decodedToken) => {
-      if (err) {
-        return res.status(400).json({ message: "You are not logged in." });
-      } else {
-        const patientusername = decodedToken.username;
-        const patient = await patientModel.findOne({ username: patientusername });
-        const healthrecords = patient.healthrecords;
-        return res.status(200).json(healthrecords);
-      }
-    });
-  } catch (error) {
-    return res.status(400).json({ "error": "Failed to retrieve health records." });
   }
 };
 

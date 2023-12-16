@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ["Admin", "Doctor", "Pharmacist", "Patient"],
-      }
+    }
 });
 
 export default mongoose.model('User',userSchema)

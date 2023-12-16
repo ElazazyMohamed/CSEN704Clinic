@@ -222,8 +222,8 @@ const patientSchema = new mongoose.Schema({
     }],
     default: [],
   },
-  prescription: {
-    type: [{
+  prescriptions: {
+    prescription: [{
       doctor: { 
         type: String
       },
@@ -242,6 +242,7 @@ const patientSchema = new mongoose.Schema({
           type: String 
         },
       }],
+      default: [],
       filled: { 
         type: Boolean, 
         default: false 
