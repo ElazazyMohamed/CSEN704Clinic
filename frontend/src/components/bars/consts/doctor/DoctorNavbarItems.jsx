@@ -24,12 +24,12 @@ export const DoctorNavbarItems = [
     label: "Medicines",
     route: "authentication",
   },
-  {
-    id: 4,
-    icon: <VaccinesIcon />,
-    label: "Health Records",
-    route: "authentication",
-  },
+  // {
+  //   id: 4,
+  //   icon: <VaccinesIcon />,
+  //   label: "Health Records",
+  //   route: "authentication",
+  // },
   {
     id: 5,
     icon: <VaccinesIcon />,

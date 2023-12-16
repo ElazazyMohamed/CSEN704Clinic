@@ -5,18 +5,22 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Button from "@mui/material/Button";
 import Alert from '@mui/material/Alert';
+import { useDispatch } from "react-redux";
+import { setOpenedNavbar } from "../../../redux/userSlice";
+import { NavbarLabel } from "../../bars/consts/enums";
 
 
 const PatientTable = ({ data }) => {
   const [open, setOpen] = React.useState(false);
   const [message, setMessage] = React.useState('');
+  const dispatch = useDispatch();
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
     },
-  
+
     {
       title: "Appointment Date",
       dataIndex: "date",
@@ -40,7 +44,9 @@ const PatientTable = ({ data }) => {
               color: "#1677ff",
               cursor: "pointer",
             }}
-            onClick={()=>{setOpen(true); setMessage("This appointment has been confirmed.")}}
+            onClick={() => {
+              dispatch(setOpenedNavbar(NavbarLabel.HealthRecords))
+            }}
           >
             Health Records
           </button>
@@ -52,7 +58,9 @@ const PatientTable = ({ data }) => {
               color: "#1677ff",
               cursor: "pointer",
             }}
-            onClick={handleReject}
+            onClick={() => {
+              dispatch(setOpenedNavbar(NavbarLabel.Prescriptions))
+            }}
           >
             Prescriptions
           </button>
@@ -84,24 +92,24 @@ const PatientTable = ({ data }) => {
       ),
     },
   ];
-  
+
   const handleReject = () => {
     console.log("Rejected");
     ``;
   };
-  
-  
-function snackbar() {
-  setOpen(true);
-};
 
-const handleClose = (event, reason) => {
-  if (reason === 'clickaway') {
-    return;
-  }
 
-  setOpen(false);
-};
+  function snackbar() {
+    setOpen(true);
+  };
+
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpen(false);
+  };
   return (
     <div>
       <Table columns={columns} dataSource={data} />

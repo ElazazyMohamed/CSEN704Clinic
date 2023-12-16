@@ -19,6 +19,7 @@ export const NavbarLabel = {
   Patients: "Patients",
   DrAppointments: "Appointments Management",
   HealthRecords: "Health Records",
+  Medicines: "Medicines",
   DrPrescriptions: "Doctor's Prescriptions",
   //Common Navbar
   Profile: "Profile",
