@@ -18,6 +18,7 @@ import Button from "@mui/material/Button";
 import { setOpenedAppbar } from "../../redux/userSlice";
 import { NavbarLabel } from "./consts/enums";
 import ProfileMenu from "./ProfileMenu";
+import NotificationsMenu from "./NotificationsMenu";
 export default function Appbar() {
   const user = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -96,6 +97,7 @@ export default function Appbar() {
         </Box>
         <Box sx={{ flexGrow: 1 }} />
         <Box sx={{ display: { xs: "none", md: "flex" } }}>
+          <NotificationsMenu />
           <ProfileMenu />
         </Box>
       </Toolbar>
