@@ -15,9 +15,9 @@ export default function Login() {
     targetElementRef.current.scrollIntoView();
   };
   return (
-    <Container component="main" maxWidth="xl">
+    <Container component="main" maxWidth="lg">
       <CssBaseline />
-      <Stack direction="column" spacing={"6.5vh"}>
+      <Stack direction="column" spacing={"3vh"}>
         <Stack
           display="flex"
           direction="row"
@@ -28,13 +28,13 @@ export default function Login() {
           <img
             src="../../images/logo.png"
             alt="logo"
-            style={{ width: "auto", height: "120px", paddingRight: "10px" }}
+            style={{ width: "auto", height: "80px", paddingRight: "10px" }}
           />
-          <Typography component="h1" variant="h1" align="center">
+          <Typography component="h1" variant="h2" align="center">
             Bond Clinic
           </Typography>
         </Stack>
-        <Typography component="h1" variant="h4" align="center">
+        <Typography component="h1" variant="h6" align="center">
           Welcome to Bond Clinic, where you can find the best doctors in the
           world.
         </Typography>
@@ -47,6 +47,7 @@ export default function Login() {
           Get Started
         </Button>
       </Stack>
+      <br/>
       <LoginForm ref={targetElementRef} />
     </Container>
   );

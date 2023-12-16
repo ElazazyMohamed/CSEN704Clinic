@@ -11,10 +11,10 @@ import pic3 from "../../images/card-pic-3.jpg";
 
 export default function Cards() {
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={3} width={"100%"}>
       <Grid item md={4}>
         <Card elevation={3}>
-          <CardMedia sx={{ height: "30vh" }} image={pic1} />
+          <CardMedia sx={{ height: "28vh" }} image={pic1} />
           <CardHeader title="Patient" subheader="Patient" />
           <CardContent>
             <Typography variant="body2" color="textSecondary">
@@ -28,7 +28,7 @@ export default function Cards() {
       </Grid>
       <Grid item md={4}>
         <Card elevation={3}>
-          <CardMedia sx={{ height: "30vh" }} image={pic2} />
+          <CardMedia sx={{ height: "28vh" }} image={pic2} />
           <CardHeader title="Patient" subheader="Patient" />
           <CardContent>
             <Typography variant="body2" color="textSecondary">
@@ -42,7 +42,7 @@ export default function Cards() {
       </Grid>
       <Grid item md={4}>
         <Card elevation={3}>
-          <CardMedia sx={{ height: "30vh" }} image={pic3} />
+          <CardMedia sx={{ height: "28vh" }} image={pic3} />
           <CardHeader title="Patient" subheader="Patient" />
           <CardContent>
             <Typography variant="body2" color="textSecondary">

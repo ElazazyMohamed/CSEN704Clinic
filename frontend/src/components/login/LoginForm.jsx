@@ -72,26 +72,24 @@ const LoginForm = forwardRef((props, ref) => {
       const data = await response.json();
       if (response.ok) {
         dispatch(setUsername(data.username));
-        dispatch(setRole(data.role));
-        switch (data.role) {
+        dispatch(setRole(data.role.toLowerCase()));
+        dispatch(setInfo(data.user));
+        switch (data.role.toLowerCase()) {
           case "patient":
             dispatch(setOpenedNavbar(NavbarLabel.FamilyMembers));
             dispatch(setOpenedAppbar(AppbarLabel.ViewFamilyMembers));
-            dispatch(setInfo(data.patient));
             break;
           case "admin":
             dispatch(setOpenedNavbar(NavbarLabel.UserManagement));
             dispatch(setOpenedAppbar(AppbarLabel.AddUser));
-            dispatch(setInfo(data.admin));
             break;
           case "doctor":
             dispatch(setOpenedNavbar(NavbarLabel.Patients));
-            dispatch(setInfo(data.doctor));
             break;
           default:
             break;
         }
-        navigate(data.role + "/home");
+        navigate(data.role.toLowerCase() + "/home");
       }
       if (!response.ok) {
         setOpen(true);
