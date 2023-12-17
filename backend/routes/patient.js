@@ -2,8 +2,8 @@ import express, { json } from "express";
 import { addFamilyMember, getFamilyMembers, 
          getDoctorsNameSpecialitySessionPrice, getDoctorNameSpeciality, filterDoctorsSpecialityAvailability, 
          selectDoctor, viewSelectedDoctor, getPrescriptions, filterPrescription, selectPrescription, 
-         uploadHealthRecord, viewHealthRecords, getHealthRecord, removeHealthRecord, getAppointments, 
-         filterAppointmentsDateStatus, getWallet, linkFamily, payAppointment, payAppointment2, payPackage, 
+         uploadHealthRecord, viewHealthRecords, removeHealthRecord, linkFamily, getAppointments, 
+         filterAppointmentsDateStatus, getWallet, payAppointment, payAppointment2, payPackage, 
          payPackage2 } from "../controllers/patientController.js";
 
 //router initialization
@@ -48,13 +48,16 @@ router.get("/get-health-records", viewHealthRecords);
 // (Req 2) As a patient remove documents (PDF,JPEG,JPG,PNG) for my medical history
 router.delete("/remove-health-record/:recordId", removeHealthRecord);
 
+// (Req 19) As a patient link another patient's account as a family member using email or phone number stating relation to the patient
+router.post('/link-family',linkFamily);
+
 router.get("/getAppointments", getAppointments);
 
 router.get("/filterAppointmentsDateStatus", filterAppointmentsDateStatus);
 
 router.get("/getWallet", getWallet);
 
-router.post('/linkFamily',linkFamily);
+
 
 router.post("/payment-appointment", payAppointment);
 

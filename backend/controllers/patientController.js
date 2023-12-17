@@ -561,7 +561,7 @@ export const getWallet = async (req,res) => {
   }
 };
 
-// (Req 19) link another patient's account as a family member using email or phone number stating relation to the patient
+// (Req 19) As a patient link another patient's account as a family member using email or phone number stating relation to the patient
 export const linkFamily = async (req, res) => {
   try {
     const token = req.cookies.jwt;
@@ -571,6 +571,38 @@ export const linkFamily = async (req, res) => {
       } else {
         const patientusername = decodedToken.username ;
         const { email, phoneNumber, relation } = req.body;
+
+        const patient = await patientModel.findOne({ username: patientusername });
+        let familyMember;
+
+        if(!email && !phoneNumber) {
+          return res.status(200).json({ message: "an email or phone number is required to link the account"});
+        }
+        if(!email) {
+          familyMember = await patientModel.findOne({ phoneNumber: phoneNumber });
+        }
+        if(!phoneNumber) {
+          familyMember = await patientModel.findOne({ email: email });
+        }
+
+        if(!familyMember) {
+          return res.status(400).json({ message: "There is no such user exist" });
+        }
+
+        function calculateAge(birthDate) {
+          const currentDate = new Date();
+          const birthYear = birthDate.getFullYear();
+          const currentYear = currentDate.getFullYear();
+          const hasBirthdayOccurred = (
+            currentDate.getMonth() > birthDate.getMonth() ||
+            (currentDate.getMonth() === birthDate.getMonth() && currentDate.getDate() >= birthDate.getDate())
+          );
+          const age = currentYear - birthYear - (hasBirthdayOccurred ? 0 : 1);
+          return age;
+        }
+
+        const familyAge = calculateAge(familyMember.dob);
+        const myAge = calculateAge(patient.dob);
 
         let inverseRealtion;
         if(relation === "wife") {
@@ -585,47 +617,31 @@ export const linkFamily = async (req, res) => {
         if(relation === "child") {
           inverseRealtion = "parent";
         }
-
-        const patient = await patientModel.findOne({ username: patientusername });
-
-        let familyMember = await patientModel.findOne({ email: email });
-        if(!familyMember) {
-          familyMember = await patientModel.findOne({ phoneNumber: phoneNumber });
-          if(!familyMember) {
-            return res.status(400).json({ message: "Family member does not exist" });
-          }
+        if(relation === "sibling") {
+          inverseRealtion = "sibling";
         }
 
-        const today = new Date();
-        let age = today.getFullYear() - patient.dob.getFullYear();
         const me = {
           name: patient.name,
-          nationalID: null,
-          age: age,
+          age: myAge,
           gender: patient.gender,
-          email: patient.email,
-          phoneNumber: patient.phoneNumber,
-          relationToPatient: inverseRealtion,
-          packageType: null,
-        }
-        familyMember.familyMembers.push(me);
-        await familyMember.save();
+          relation: relation
+        };
 
-        const familyMemberDetails = {
-          name: null,
-          nationalID: null,
-          age: null,
-          gender: null,
-          email: email,
-          phoneNumber: phoneNumber,
-          relationToPatient: relation,
-          packageType: null,
-        }
-        patient.familyMembers.push(familyMemberDetails);
-        await patient.save();
-        
-        return res.status(200).json({ "Message": "familyMember added successfully",
-                                      "Family Member": familyMember });
+        const member = {
+          name: familyMember.name,
+          age: familyAge,
+          gender: familyMember.gender,
+          relation: inverseRealtion
+        };
+
+        patient.family.members.push(member);
+        patient.save();
+
+        familyMember.family.members.push(me);
+        familyMember.save();
+
+        return res.status(200).json({ "Message": "familyMember added successfully" });
      }
     });
   } catch (error) {

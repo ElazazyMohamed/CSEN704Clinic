@@ -1,4 +1,6 @@
 import express from "express";
+import http from 'http';
+import WebSocket from 'ws';
 import patientRoutes from "./routes/patient.js";
 import doctorRoutes from "./routes/doctor.js";
 import adminRoutes from "./routes/admin.js"
@@ -9,6 +11,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from 'dotenv';
 import cookieParser from "cookie-parser";
+// import { createServer } from 'http';
+// import { Server } from 'ws';
 
 //initializations
 dotenv.config();
