@@ -49,10 +49,10 @@ export default function Patient() {
       case AppbarLabel.ViewFamilyMembers:
         return (
           <Box sx={{ width: "50%" }}>
-            <Typography variant="h4" align="center" marginBottom={5}>
-              Family Members
-            </Typography>
-            <FamilyMembersTable tableData={rows} />
+            <FamilyMembersTable
+              tableData1={rowsUnsubscribed}
+              tableData2={rowsSubscribed}
+            />
           </Box>
         );
       case AppbarLabel.ViewAppointments:
@@ -77,24 +77,49 @@ export default function Patient() {
     }
   }
 
-  const rows = [
+  const rowsUnsubscribed = [
     {
-      id: 1,
+      key: 0,
       name: "John Doe",
       nationalID: "123456789",
       age: 30,
       gender: "Male",
-      relationToPatient: "Friend",
+      relationToPatient: "Child",
       packageType: "Basic Package",
+      action: 0,
     },
     {
-      id: 2,
+      key: 1,
       name: "Jane Smith",
       nationalID: "987654321",
       age: 25,
       gender: "Female",
       relationToPatient: "Family",
-      packageType: "Premium Package",
+      packageType: "Basic Package",
+      action: 1,
+    },
+    // Add more rows as needed
+  ];
+  const rowsSubscribed = [
+    {
+      key: 0,
+      name: "John Doe",
+      nationalID: "123456789",
+      age: 30,
+      gender: "Male",
+      relationToPatient: "Child",
+      packageType: "Gold Package",
+      action: 0,
+    },
+    {
+      key: 1,
+      name: "Jane Smith",
+      nationalID: "987654321",
+      age: 25,
+      gender: "Female",
+      relationToPatient: "Family",
+      packageType: "Silver Package",
+      action: 1,
     },
     // Add more rows as needed
   ];
